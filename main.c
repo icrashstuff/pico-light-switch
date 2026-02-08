@@ -42,14 +42,65 @@
  */
 #include <stdio.h>
 
+#include "hardware/watchdog.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
 #include "actuator.h"
+#include "ntp.h"
+#include "unix_time.h"
+
+[[noreturn]] void die(void)
+{
+    watchdog_enable(0, false);
+    while (1)
+        tight_loop_contents();
+}
+
+static int status_impl_dummy_func(const char* fmt, va_list va)
+{
+    (void)fmt;
+    (void)va;
+    return 0;
+}
+
+static int (*status_impl)(const char* fmt, va_list vlist) = vprintf;
+
+#if defined(__GNUC__) || defined(__clang__)
+#define formatting_attribute(fmtargnumber) __attribute__((format(__printf__, fmtargnumber, fmtargnumber + 1)))
+#endif
+static formatting_attribute(1) int status(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int r = status_impl(fmt, args);
+    va_end(args);
+    return r;
+}
+
+/**
+ * Minimum number of microseconds between each successive printing of program status
+ */
+#define STATUS_PRINT_INTERVAL (1000 * 1000)
+
+static void setup_status()
+{
+    static uint64_t last_status_time = 0;
+    const uint64_t loop_start_time = time_us_64();
+    if (loop_start_time / STATUS_PRINT_INTERVAL != last_status_time / STATUS_PRINT_INTERVAL)
+    {
+        status_impl = vprintf;
+        last_status_time = loop_start_time;
+    }
+    else
+        status_impl = status_impl_dummy_func;
+}
 
 int main()
 {
     stdio_init_all();
+
+    init_unix_time();
 
     struct actuator_t actuator0;
     {
@@ -66,19 +117,34 @@ int main()
     if (cyw43_arch_init())
     {
         printf("failed to initialise\n");
-        return 1;
+        die();
     }
 
     cyw43_arch_enable_sta_mode();
 
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH_MODE, 30000))
+    {
+        printf("failed to connect\n");
+        die();
+    }
+
+    ntp_init();
+
     while (actuator_in_cycle(&actuator0))
+    {
+        setup_status();
+        status("%llu\n", get_unix_time() / 1000000);
         actuator_poll(&actuator0);
+    }
 
     actuator_trigger(&actuator0);
 
     while (1)
+    {
+        setup_status();
+        status("%llu\n", get_unix_time() / 1000000);
         actuator_poll(&actuator0);
+    }
 
-    cyw43_arch_deinit();
-    return 0;
+    die();
 }

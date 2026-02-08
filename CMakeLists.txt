@@ -32,10 +32,23 @@ pico_sdk_init()
 
 add_executable(pico-light-switch
     main.c
+    ntp.c
+    unix_time.c
     actuator.c
 )
 target_include_directories(pico-light-switch PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_compile_definitions(pico-light-switch PUBLIC PICO_INCLUDE_RTC_DATETIME=0)
+
+
+set(WIFI_SSID     "" CACHE STRING "Wifi SSID")
+set(WIFI_PASSWORD "" CACHE STRING "Wifi password")
+set(WIFI_AUTH_MODE CYW43_AUTH_WPA2_AES_PSK CACHE STRING "Wifi authorization type (A CYW43_AUTH_* value)")
+
+target_compile_definitions(pico-light-switch PRIVATE
+    WIFI_SSID=\"${WIFI_SSID}\"
+    WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+    WIFI_AUTH_MODE=${WIFI_AUTH_MODE}
+)
 
 target_compile_options(pico-light-switch PUBLIC -Wall -Wextra -Wshadow)
 target_compile_definitions(pico-light-switch PUBLIC -DUSBD_MANUFACTURER="Ian Hangartner")
