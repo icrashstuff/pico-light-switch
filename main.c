@@ -127,11 +127,14 @@ int main()
 
     watchdog_enable(16384, true);
 
+    cyw43_arch_lwip_begin();
+    watchdog_update();
     sntp_setservername(0, SNTP_SERVER_ADDRESS_0);
     sntp_setservername(1, SNTP_SERVER_ADDRESS_1);
     sntp_setservername(2, SNTP_SERVER_ADDRESS_2);
     sntp_setservername(3, SNTP_SERVER_ADDRESS_3);
     sntp_init();
+    cyw43_arch_lwip_end();
     watchdog_update();
 
     while (actuator_in_cycle(&actuator0))
@@ -160,6 +163,8 @@ int main()
             die();
     }
 
+    cyw43_arch_lwip_begin();
     sntp_stop();
+    cyw43_arch_lwip_end();
     cyw43_arch_deinit();
 }
