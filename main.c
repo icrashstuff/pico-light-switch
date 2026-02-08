@@ -40,14 +40,16 @@
  * @par Configuration
  * @ref main.c
  */
+#include "config.h"
+
 #include <stdio.h>
 
 #include "hardware/watchdog.h"
+#include "lwip/apps/sntp.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
 #include "actuator.h"
-#include "ntp.h"
 #include "unix_time.h"
 
 [[noreturn]] void die(void)
@@ -77,11 +79,6 @@ static formatting_attribute(1) int status(const char* fmt, ...)
     va_end(args);
     return r;
 }
-
-/**
- * Minimum number of microseconds between each successive printing of program status
- */
-#define STATUS_PRINT_INTERVAL (1000 * 1000)
 
 static void setup_status()
 {
@@ -128,23 +125,37 @@ int main()
         die();
     }
 
-    ntp_init();
+    watchdog_enable(8192, true);
+
+    sntp_init();
+    watchdog_update();
 
     while (actuator_in_cycle(&actuator0))
     {
+        watchdog_update();
         setup_status();
         status("%llu\n", get_unix_time() / 1000000);
         actuator_poll(&actuator0);
+
+        if (time_us_64() > REBOOT_INTERVAL)
+            die();
     }
 
+    watchdog_update();
     actuator_trigger(&actuator0);
 
     while (1)
     {
+        watchdog_update();
         setup_status();
-        status("%llu\n", get_unix_time() / 1000000);
+        const microseconds_t us = get_unix_time();
+        status("%llu.%06llu\n", us / 1000000, us % 1000000);
         actuator_poll(&actuator0);
+
+        if (time_us_64() > REBOOT_INTERVAL)
+            die();
     }
 
-    die();
+    sntp_stop();
+    cyw43_arch_deinit();
 }

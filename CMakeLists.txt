@@ -32,7 +32,6 @@ pico_sdk_init()
 
 add_executable(pico-light-switch
     main.c
-    ntp.c
     unix_time.c
     actuator.c
 )
@@ -54,12 +53,17 @@ target_compile_options(pico-light-switch PUBLIC -Wall -Wextra -Wshadow)
 target_compile_definitions(pico-light-switch PUBLIC -DUSBD_MANUFACTURER="Ian Hangartner")
 target_compile_definitions(pico-light-switch PUBLIC -DUSBD_PRODUCT="pico-light-switch")
 
-target_link_libraries(pico-light-switch PRIVATE pico_cyw43_arch_lwip_threadsafe_background)
+target_link_libraries(pico-light-switch PRIVATE
+    pico_cyw43_arch_lwip_threadsafe_background
+    pico_lwip_mbedtls
+    pico_lwip_sntp
+    pico_mbedtls
 
-target_link_libraries(pico-light-switch PRIVATE pico_stdlib)
-target_link_libraries(pico-light-switch PRIVATE pico_malloc)
-target_link_libraries(pico-light-switch PRIVATE pico_multicore)
-target_link_libraries(pico-light-switch PRIVATE hardware_watchdog)
+    pico_stdlib
+    pico_malloc
+    pico_multicore
+    hardware_watchdog
+)
 
 
 if (TARGET tinyusb_device)

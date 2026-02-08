@@ -27,19 +27,16 @@
  * DEALINGS IN THE SOFTWARE.
  * @endparblock
  *
- * NTP (Network Time Protocol) interface, the actual implementation is from pico-examples
- *
- * Updates the clock used by `get_unix_time()` asynchronously in the background
- * @sa unix_time.h
+ * @brief Program configuration
  */
-
 #pragma once
 
-#include <stdbool.h>
+/**
+ * Minimum number of microseconds between each successive printing of program status
+ */
+#define STATUS_PRINT_INTERVAL (1000 * 1000)
 
 /**
- * Init background NTP time sync
- *
- * @returns True on successful init, false on failure
+ * Maximum uptime permitted before hard reset
  */
-bool ntp_init();
+#define REBOOT_INTERVAL (24ul * 60ul * 60ul * 1000ul * 1000ul)

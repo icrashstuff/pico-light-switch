@@ -124,5 +124,10 @@
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 
+#include "unix_time.h"
+#define SNTP_SET_SYSTEM_TIME_US(s, us) set_unix_time((s * 1000000ll) + us)
+#define SNTP_SERVER_DNS 1
+#define SNTP_SERVER_ADDRESS "pool.ntp.org"
+
 #endif
 /* clang-format on */
