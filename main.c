@@ -125,7 +125,7 @@ int main()
         die();
     }
 
-    watchdog_enable(8192, true);
+    watchdog_enable(16384, true);
 
     sntp_init();
     watchdog_update();
