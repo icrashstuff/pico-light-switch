@@ -127,7 +127,11 @@
 #include "unix_time.h"
 #define SNTP_SET_SYSTEM_TIME_US(s, us) set_unix_time((s * 1000000ll) + us)
 #define SNTP_SERVER_DNS 1
-#define SNTP_SERVER_ADDRESS "pool.ntp.org"
+#define SNTP_SERVER_ADDRESS_0 "0.pool.ntp.org"
+#define SNTP_SERVER_ADDRESS_1 "1.pool.ntp.org"
+#define SNTP_SERVER_ADDRESS_2 "2.pool.ntp.org"
+#define SNTP_SERVER_ADDRESS_3 "3.pool.ntp.org"
+#define LWIP_DHCP_MAX_NTP_SERVERS 4
 
 #endif
 /* clang-format on */

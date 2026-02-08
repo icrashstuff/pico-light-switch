@@ -127,6 +127,10 @@ int main()
 
     watchdog_enable(16384, true);
 
+    sntp_setservername(0, SNTP_SERVER_ADDRESS_0);
+    sntp_setservername(1, SNTP_SERVER_ADDRESS_1);
+    sntp_setservername(2, SNTP_SERVER_ADDRESS_2);
+    sntp_setservername(3, SNTP_SERVER_ADDRESS_3);
     sntp_init();
     watchdog_update();
 
