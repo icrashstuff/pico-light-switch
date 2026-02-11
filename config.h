@@ -56,10 +56,10 @@
 #define ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT 21
 
 /** Time (in microseconds) for full actuator travel */
-#define ACTUATOR_TRAVEL_TIME (10ll * 1000ll * 1000ll)
+#define ACTUATOR_TRAVEL_TIME (10ull * 1000ull * 1000ull)
 
 /** Time (in microseconds) to rest between switching directions */
-#define ACTUATOR_REST_TIME (500ll * 1000ll)
+#define ACTUATOR_REST_TIME (500ull * 1000ull)
 
 /** Logic level that must be put to "extend" gpio pin for actuator retraction to occur */
 #define ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND 0
@@ -74,7 +74,7 @@
 /**
  * Length of time (in seconds) to repeatedly cycle the actuator when the schedule calls for an update
  */
-#define SCHEDULE_TRIGGER_REGION_LENGTH (60ll)
+#define SCHEDULE_TRIGGER_REGION_LENGTH (60ull)
 
 /**
  * When reloading schedule, trigger an "ON" actuation if the last status was "ON"
@@ -93,7 +93,7 @@
 /**
  * Minimum number of microseconds between each successive printing of program status
  */
-#define STATUS_PRINT_INTERVAL (1000 * 1000)
+#define STATUS_PRINT_INTERVAL (1000ull * 1000ull)
 
 /**
  * Maximum uptime permitted before hard reset
@@ -103,4 +103,4 @@
 /**
  * Minimum uptime before led switches from 1hz blink to 0.5 hz blink
  */
-#define SLOW_BLINK_UPTIME (1ul * 60ul * 60ul * 1000ul * 1000ul)
+#define SLOW_BLINK_UPTIME (1ull * 60ull * 60ull * 1000ull * 1000ull)
