@@ -39,7 +39,7 @@ struct actuator_config_t
     uint64_t time_travel; ///< Time (in microseconds) for full actuator travel
     uint64_t time_rest; ///< Time (in microseconds) to rest between switching directions
     uint8_t gpio_retract; ///< GPIO pin that signals actuator retraction
-    uint8_t gpio_extend; ///< GPIO pin that signals actuator retraction
+    uint8_t gpio_extend; ///< GPIO pin that signals actuator extension
 
     /** Logic level that must be put to `gpio_retract` for actuator retraction to occur */
     bool logic_active_level_retract;
