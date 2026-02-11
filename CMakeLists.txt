@@ -36,7 +36,10 @@ add_executable(pico-light-switch
     actuator.c
 )
 target_include_directories(pico-light-switch PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_compile_definitions(pico-light-switch PUBLIC PICO_INCLUDE_RTC_DATETIME=0)
+target_compile_definitions(pico-light-switch PUBLIC
+    PICO_INCLUDE_RTC_DATETIME=0
+    PICO_DEBUG_MALLOC=1
+)
 
 
 set(WIFI_SSID     "" CACHE STRING "Wifi SSID")
