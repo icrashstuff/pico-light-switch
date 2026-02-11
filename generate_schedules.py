@@ -119,29 +119,15 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
         cur = cur + datetime.timedelta(days=1)
     return out
 
-SCHEDULE_MAX_ENTRIES = 1536
-
-def write_schedule_to_file(fname,
-                           time_on:  list[list[datetime.timedelta]],
-                           time_off: list[list[datetime.timedelta]]) -> None:
-    sched = generate_schedule(time_on, time_off)
-
-    if (len(sched) > SCHEDULE_MAX_ENTRIES):
-        raise Exception("Too many schedule entries!")
-
-    bytes_possible = 0
-    bytes_written = 0
-    with open(fname, 'wb') as fd:
-        bytes_possible += SCHEDULE_MAX_ENTRIES * struct.calcsize("<Q")
+def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
+    with open(f"{name}.h", 'w') as fd:
+        epoch = sched[0][0]
+        fd.write(f"schedule_t {name} =" " { " f"{sched[0][0]}ull,\n")
+        fd.write("    {\n")
         for i in sched:
-            fd.write(struct.pack("<Q", (i[0] << 1) | (i[1] & 1)))
-        bytes_written = fd.tell()
-    print(f"{fname}: {bytes_written}/{bytes_possible} bytes "
-          f"({bytes_written * 100/bytes_possible:.1f}%)")
-
-
+            fd.write("        { %d, %d },\n" % (i[0] - epoch, i[1]))
+        fd.write("    } };\n")
 
 if __name__ == '__main__':
-    from pprint import pprint
-    write_schedule_to_file("schedule_level_1.bin", time_on_level_1, time_off_level_1)
-    write_schedule_to_file("schedule_level_2.bin", time_on_level_2, time_off_level_2)
+    write_schedule_header("schedule_level_1", generate_schedule(time_on_level_1, time_off_level_1))
+    write_schedule_header("schedule_level_2", generate_schedule(time_on_level_2, time_off_level_2))
