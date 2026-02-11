@@ -52,8 +52,13 @@
 
 #include "unix_time.h"
 
+#define LOG(fmt, ...) printf("Core 0: " fmt, ##__VA_ARGS__)
+
 [[noreturn]] void die(void)
 {
+    const microseconds_t us_up = time_us_64();
+    LOG("die() called @ %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
+    fflush(stdout);
     watchdog_enable(0, false);
     while (1)
         tight_loop_contents();
@@ -99,24 +104,31 @@ int main()
 {
     stdio_init_all();
 
+    printf("\n\nBegin boot\npico-light-switch %s %s\n\n", __DATE__, __TIME__);
+
+    LOG("Initializing unix time\n");
     init_unix_time();
 
+    LOG("Launching core 1\n");
     multicore_launch_core1(main_core1);
 
+    LOG("Initializing cyw43_arch\n");
     if (cyw43_arch_init())
     {
-        printf("failed to initialise\n");
+        LOG("Failed to initialise cyw43_arch!\n");
         die();
     }
 
     cyw43_arch_enable_sta_mode();
 
+    LOG("Connecting to SSID: '%s'\n", WIFI_SSID);
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH_MODE, 30000))
     {
-        printf("failed to connect\n");
+        printf("Failed to connect to SSID: '%s'!\n", WIFI_SSID);
         die();
     }
 
+    LOG("Initializing SNTP\n");
     cyw43_arch_lwip_begin();
     sntp_setservername(0, SNTP_SERVER_ADDRESS_0);
     sntp_setservername(1, SNTP_SERVER_ADDRESS_1);
@@ -125,13 +137,14 @@ int main()
     sntp_init();
     cyw43_arch_lwip_end();
 
+    LOG("Setup done, beginning loop\n");
     while (1)
     {
         setup_status();
-        const microseconds_t us_up = time_us_64();
-        const microseconds_t us_cur = get_unix_time();
-        const microseconds_t us_sync = unix_time_get_last_sync();
-        const microseconds_t us_since_last_sync = us_cur - us_sync;
+        const uint64_t us_up = time_us_64();
+        const uint64_t us_cur = get_unix_time();
+        const uint64_t us_sync = unix_time_get_last_sync();
+        const uint64_t us_since_last_sync = us_cur - us_sync;
         if (us_up > SLOW_BLINK_UPTIME)
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 1000000) & 1);
         else

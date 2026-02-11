@@ -36,12 +36,18 @@
 
 #include "config.h"
 
+#include <stdio.h>
+
+#define LOG(fmt, ...) printf("Core 1: " fmt, ##__VA_ARGS__)
+
 void main_core1()
 {
+    LOG("Started\n");
     struct actuator_t level_1_on;
     struct actuator_t level_1_off;
     struct actuator_t level_2_on;
     struct actuator_t level_2_off;
+    LOG("Initializing actuators\n");
     {
         struct actuator_config_t cinfo = {};
         cinfo.time_travel = ACTUATOR_TRAVEL_TIME;
@@ -66,7 +72,7 @@ void main_core1()
         actuator_init(&level_2_off, &cinfo);
     }
 
-    /* Wait for actuators to retract */
+    LOG("Waiting for actuators to retract\n");
     while (actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off) || actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off))
     {
         actuator_poll(&level_1_on);
@@ -74,4 +80,6 @@ void main_core1()
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
     }
+
+    LOG("Halting!\n");
 }
