@@ -52,6 +52,7 @@ target_compile_definitions(pico-light-switch PRIVATE
 target_compile_options(pico-light-switch PUBLIC -Wall -Wextra -Wshadow)
 target_compile_definitions(pico-light-switch PUBLIC -DUSBD_MANUFACTURER="Ian Hangartner")
 target_compile_definitions(pico-light-switch PUBLIC -DUSBD_PRODUCT="pico-light-switch")
+target_link_options(pico-light-switch PRIVATE "-Wl,--print-memory-usage")
 
 target_link_libraries(pico-light-switch PRIVATE
     pico_cyw43_arch_lwip_threadsafe_background
