@@ -38,7 +38,7 @@
  * - A linear actuator
  *
  * @par Configuration
- * @ref main.c
+ * @ref config.c
  */
 #include "config.h"
 
@@ -47,9 +47,9 @@
 #include "hardware/watchdog.h"
 #include "lwip/apps/sntp.h"
 #include "pico/cyw43_arch.h"
+#include "pico/multicore.h"
 #include "pico/stdlib.h"
 
-#include "actuator.h"
 #include "unix_time.h"
 
 [[noreturn]] void die(void)
@@ -93,23 +93,15 @@ static void setup_status()
         status_impl = status_impl_dummy_func;
 }
 
+extern void main_core1(void);
+
 int main()
 {
     stdio_init_all();
 
     init_unix_time();
 
-    struct actuator_t actuator0;
-    {
-        struct actuator_config_t cinfo = {};
-        cinfo.time_travel = 10 * 1000 * 1000;
-        cinfo.time_rest = 500 * 1000;
-        cinfo.gpio_extend = 18;
-        cinfo.gpio_retract = 19;
-        cinfo.logic_active_level_extend = 0;
-        cinfo.logic_active_level_retract = 0;
-        actuator_init(&actuator0, &cinfo);
-    }
+    multicore_launch_core1(main_core1);
 
     if (cyw43_arch_init())
     {
@@ -125,39 +117,30 @@ int main()
         die();
     }
 
-    watchdog_enable(16384, true);
-
     cyw43_arch_lwip_begin();
-    watchdog_update();
     sntp_setservername(0, SNTP_SERVER_ADDRESS_0);
     sntp_setservername(1, SNTP_SERVER_ADDRESS_1);
     sntp_setservername(2, SNTP_SERVER_ADDRESS_2);
     sntp_setservername(3, SNTP_SERVER_ADDRESS_3);
     sntp_init();
     cyw43_arch_lwip_end();
-    watchdog_update();
-
-    while (actuator_in_cycle(&actuator0))
-    {
-        watchdog_update();
-        setup_status();
-        status("%llu\n", get_unix_time() / 1000000);
-        actuator_poll(&actuator0);
-
-        if (time_us_64() > REBOOT_INTERVAL)
-            die();
-    }
-
-    watchdog_update();
-    actuator_trigger(&actuator0);
 
     while (1)
     {
-        watchdog_update();
         setup_status();
-        const microseconds_t us = get_unix_time();
-        status("%llu.%06llu\n", us / 1000000, us % 1000000);
-        actuator_poll(&actuator0);
+        const microseconds_t us_up = time_us_64();
+        const microseconds_t us_cur = get_unix_time();
+        const microseconds_t us_sync = unix_time_get_last_sync();
+        const microseconds_t us_since_last_sync = us_cur - us_sync;
+        if (us_up > SLOW_BLINK_UPTIME)
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 1000000) & 1);
+        else
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 500000) & 1);
+        status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
+        status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
+        status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
+
+        cyw43_arch_poll();
 
         if (time_us_64() > REBOOT_INTERVAL)
             die();

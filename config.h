@@ -31,6 +31,65 @@
  */
 #pragma once
 
+/******************************************************
+ *                  ACTUATOR CONFIG                   *
+ ******************************************************/
+
+/* GPIO pin that signals actuator extension for "LEVEL 1 ON" actuators */
+#define ACTUATOR_GPIO_LEVEL_1_ON_EXTEND 10
+/* GPIO pin that signals actuator retraction for "LEVEL 1 ON" actuators */
+#define ACTUATOR_GPIO_LEVEL_1_ON_RETRACT 11
+
+/* GPIO pin that signals actuator extension for "LEVEL 1 OFF" actuators */
+#define ACTUATOR_GPIO_LEVEL_1_OFF_EXTEND 12
+/* GPIO pin that signals actuator retraction for "LEVEL 1 OFF" actuators */
+#define ACTUATOR_GPIO_LEVEL_1_OFF_RETRACT 13
+
+/* GPIO pin that signals actuator extension for "LEVEL 2 ON" actuators */
+#define ACTUATOR_GPIO_LEVEL_2_ON_EXTEND 18
+/* GPIO pin that signals actuator retraction for "LEVEL 2 ON" actuators */
+#define ACTUATOR_GPIO_LEVEL_2_ON_RETRACT 19
+
+/* GPIO pin that signals actuator extension for "LEVEL 2 OFF" actuators */
+#define ACTUATOR_GPIO_LEVEL_2_OFF_EXTEND 20
+/* GPIO pin that signals actuator retraction for "LEVEL 2 OFF" actuators */
+#define ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT 21
+
+/** Time (in microseconds) for full actuator travel */
+#define ACTUATOR_TRAVEL_TIME (10ll * 1000ll * 1000ll)
+
+/** Time (in microseconds) to rest between switching directions */
+#define ACTUATOR_REST_TIME (500ll * 1000ll)
+
+/** Logic level that must be put to "extend" gpio pin for actuator retraction to occur */
+#define ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND 0
+
+/** Logic level that must be put to "retract" gpio pin for actuator retraction to occur */
+#define ACTUATOR_ACTIVE_LOGIC_LEVEL_RETRACT 0
+
+/******************************************************
+ *                  SCHEDULE CONFIG                   *
+ ******************************************************/
+
+/**
+ * Length of time (in seconds) to repeatedly cycle the actuator when the schedule calls for an update
+ */
+#define SCHEDULE_TRIGGER_REGION_LENGTH (60ll)
+
+/**
+ * When reloading schedule, trigger an "ON" actuation if the last status was "ON"
+ */
+#define SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_ON_REGION 1
+
+/**
+ * When reloading schedule, trigger an "OFF" actuation if the last status was "OFF"
+ */
+#define SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION 0
+
+/******************************************************
+ *                    MISC CONFIG                     *
+ ******************************************************/
+
 /**
  * Minimum number of microseconds between each successive printing of program status
  */
@@ -40,3 +99,8 @@
  * Maximum uptime permitted before hard reset
  */
 #define REBOOT_INTERVAL (24ul * 60ul * 60ul * 1000ul * 1000ul)
+
+/**
+ * Minimum uptime before led switches from 1hz blink to 0.5 hz blink
+ */
+#define SLOW_BLINK_UPTIME (1ul * 60ul * 60ul * 1000ul * 1000ul)

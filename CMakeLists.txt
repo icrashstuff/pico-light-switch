@@ -32,6 +32,7 @@ pico_sdk_init()
 
 add_executable(pico-light-switch
     main.c
+    main_core1.c
     unix_time.c
     actuator.c
 )
@@ -58,7 +59,7 @@ target_compile_definitions(pico-light-switch PUBLIC -DUSBD_PRODUCT="pico-light-s
 target_link_options(pico-light-switch PRIVATE "-Wl,--print-memory-usage")
 
 target_link_libraries(pico-light-switch PRIVATE
-    pico_cyw43_arch_lwip_threadsafe_background
+    pico_cyw43_arch_lwip_poll
     pico_lwip_sntp
 
     pico_stdlib
