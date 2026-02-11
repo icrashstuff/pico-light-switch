@@ -133,5 +133,10 @@
 #define SNTP_SERVER_ADDRESS_3 "3.pool.ntp.org"
 #define LWIP_DHCP_MAX_NTP_SERVERS 4
 
+/* $PICO_SDK_PATH/lib/lwip/src/apps/sntp/sntp.c notes that this must be raised by at least 1
+ * So I arbitrarily chose to raise it by 16 - Ian, 2026-02-10
+ */
+#define MEMP_NUM_SYS_TIMEOUT (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 16)
+
 #endif
 /* clang-format on */
