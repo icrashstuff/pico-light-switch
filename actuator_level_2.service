@@ -1,0 +1,12 @@
+[Unit]
+Description=Actuator daemon (Level 2 schedule)
+
+[Service]
+Type=simple
+WorkingDirectory=/tmp/
+ExecStart=python3 /usr/local/bin/generate_schedules.py level_2
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
