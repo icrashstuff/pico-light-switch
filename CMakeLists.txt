@@ -67,7 +67,7 @@ target_link_libraries(pico-light-switch PRIVATE
 
 if (TARGET tinyusb_device)
     pico_enable_stdio_usb(pico-light-switch 1)
-    pico_enable_stdio_uart(pico-light-switch 0)
+    pico_enable_stdio_uart(pico-light-switch 1)
 else()
    message(FATAL_ERROR "USB not enabled!")
 endif()
