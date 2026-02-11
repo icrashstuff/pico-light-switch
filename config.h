@@ -98,7 +98,7 @@
 /**
  * Maximum uptime permitted before hard reset
  */
-#define REBOOT_INTERVAL (24ul * 60ul * 60ul * 1000ul * 1000ul)
+#define REBOOT_INTERVAL (24ull * 60ull * 60ull * 1000ull * 1000ull)
 
 /**
  * Minimum uptime before led switches from 1hz blink to 0.5 hz blink
