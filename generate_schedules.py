@@ -24,14 +24,15 @@ import datetime
 import zoneinfo
 import struct
 
+
 tz = zoneinfo.ZoneInfo("America/Anchorage")
 
-def d(y: int, m: int, d: int) -> datetime.datetime():
+def d(y: int, m: int, d: int) -> datetime.datetime:
     return datetime.datetime(y, m, d, tzinfo=tz)
 
 def drange(y1: int, m1: int, d1: int,
            y2: int, m2: int, d2: int
-           ) -> list[datetime.datetime()]:
+           ) -> list[datetime.datetime]:
     cur = d(y1, m1, d1)
     end = d(y2, m2, d2)
     l = []
@@ -59,7 +60,7 @@ schedule_exceptions = [
     d(2026,  5,  1), # PL
 ]
 
-def t(h: int, m: int) -> datetime.timedelta():
+def t(h: int, m: int) -> datetime.timedelta:
     return datetime.timedelta(hours=h, minutes=m)
 
 time_on_level_2 = [
@@ -108,30 +109,39 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
     cur = schedule_start
     out = []
     while(cur <= schedule_end):
-        day_of_week = (cur.weekday() + 1) % 7
-        for i in time_on[day_of_week]:
-            out.append((int((cur + i).timestamp()), 1))
-        for i in time_off[day_of_week]:
-            out.append((int((cur + i).timestamp()), 0))
+        if(cur not in schedule_exceptions):
+            day_of_week = (cur.weekday() + 1) % 7
+            for i in time_on[day_of_week]:
+                out.append((int((cur + i).timestamp()), 1))
+            for i in time_off[day_of_week]:
+                out.append((int((cur + i).timestamp()), 0))
 
         cur = cur + datetime.timedelta(days=1)
     return out
 
-MAX_SCHEDULE_BIN_SIZE = 65536
+SCHEDULE_MAX_ENTRIES = 1536
 
-def write_schedule(io,
-                   time_on:  list[list[datetime.timedelta]],
-                   time_off: list[list[datetime.timedelta]]) -> None:
-    sched = generate_schedule(time_on_level_1, time_off_level_1)
+def write_schedule_to_file(fname,
+                           time_on:  list[list[datetime.timedelta]],
+                           time_off: list[list[datetime.timedelta]]) -> None:
+    sched = generate_schedule(time_on, time_off)
 
-    if (struct.calcsize("<Q") * len(sched) > MAX_SCHEDULE_BIN_SIZE):
+    if (len(sched) > SCHEDULE_MAX_ENTRIES):
         raise Exception("Too many schedule entries!")
-    for i in sched:
-        io.write(struct.pack("<Q", (i[0] << 1) | (i[1] & 1)))
+
+    bytes_possible = 0
+    bytes_written = 0
+    with open(fname, 'wb') as fd:
+        bytes_possible += SCHEDULE_MAX_ENTRIES * struct.calcsize("<Q")
+        for i in sched:
+            fd.write(struct.pack("<Q", (i[0] << 1) | (i[1] & 1)))
+        bytes_written = fd.tell()
+    print(f"{fname}: {bytes_written}/{bytes_possible} bytes "
+          f"({bytes_written * 100/bytes_possible:.1f}%)")
+
+
 
 if __name__ == '__main__':
     from pprint import pprint
-    with open("schedule_level_1.bin", 'wb') as fd:
-        write_schedule(fd, time_on_level_1, time_on_level_1)
-    with open("schedule_level_2.bin", 'wb') as fd:
-        write_schedule(fd, time_on_level_2, time_on_level_2)
+    write_schedule_to_file("schedule_level_1.bin", time_on_level_1, time_off_level_1)
+    write_schedule_to_file("schedule_level_2.bin", time_on_level_2, time_off_level_2)

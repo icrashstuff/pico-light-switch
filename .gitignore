@@ -4,3 +4,5 @@ build/*
 latex/*
 doxygen/*
 html/*
+__pycache__/*
+*.pyc
