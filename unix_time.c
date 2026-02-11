@@ -37,6 +37,7 @@
 static mutex_t lock = {};
 
 static microseconds_t offset = 0;
+static microseconds_t last_sync = 0;
 
 microseconds_t get_unix_time()
 {
@@ -47,9 +48,19 @@ microseconds_t get_unix_time()
     return r;
 }
 
+microseconds_t unix_time_get_last_sync()
+{
+    microseconds_t r = 0;
+    mutex_enter_blocking(&lock);
+    r = last_sync;
+    mutex_exit(&lock);
+    return r;
+}
+
 void set_unix_time(const microseconds_t microseconds_since_1970)
 {
     mutex_enter_blocking(&lock);
+    last_sync = (microseconds_t)microseconds_since_1970;
     offset = microseconds_since_1970 - (microseconds_t)time_us_64();
     mutex_exit(&lock);
 }

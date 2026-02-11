@@ -48,6 +48,13 @@ typedef int64_t microseconds_t;
 microseconds_t get_unix_time();
 
 /**
+ * Gets last time sync value
+ *
+ * @returns Latest value passed to `set_unix_time`
+ */
+microseconds_t unix_time_get_last_sync();
+
+/**
  * Sets unix time
  */
 void set_unix_time(const microseconds_t microseconds_since_1970);
