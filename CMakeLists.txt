@@ -48,10 +48,21 @@ set(WIFI_SSID     "" CACHE STRING "Wifi SSID")
 set(WIFI_PASSWORD "" CACHE STRING "Wifi password")
 set(WIFI_AUTH_MODE CYW43_AUTH_WPA2_AES_PSK CACHE STRING "Wifi authorization type (A CYW43_AUTH_* value)")
 
+set(WIFI_COUNTRY_CODE "CYW43_COUNTRY_WORLDWIDE" CACHE STRING
+    "Country code macro to use for cyw43 wifi (see $PICO_SDK_PATH/lib/cyw43-driver/src/cyw43_country.h)"
+)
+
+if("${WIFI_COUNTRY_CODE}" STREQUAL "CYW43_COUNTRY_WORLDWIDE")
+    message(WARNING "Wifi country code set to worldwide")
+endif()
+
+
 target_compile_definitions(pico-light-switch PRIVATE
     WIFI_SSID=\"${WIFI_SSID}\"
     WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
     WIFI_AUTH_MODE=${WIFI_AUTH_MODE}
+    WIFI_COUNTRY_CODE=${WIFI_COUNTRY_CODE}
+    WIFI_COUNTRY_CODE_STR=\"${WIFI_COUNTRY_CODE}\"
 )
 
 target_compile_options(pico-light-switch PUBLIC -Wall -Wextra -Wshadow)

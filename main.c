@@ -119,8 +119,8 @@ int main()
     LOG("Launching core 1\n");
     multicore_launch_core1(main_core1);
 
-    LOG("Initializing cyw43_arch\n");
-    if (cyw43_arch_init())
+    LOG("Initializing cyw43_arch for country %s\n", WIFI_COUNTRY_CODE_STR);
+    if (cyw43_arch_init_with_country(WIFI_COUNTRY_CODE))
     {
         LOG("Failed to initialise cyw43_arch!\n");
         die();
