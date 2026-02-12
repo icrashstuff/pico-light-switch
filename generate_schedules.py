@@ -122,7 +122,7 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
 def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
     with open(f"{name}.h", 'w') as fd:
         epoch = sched[0][0]
-        fd.write(f"schedule_t {name} =" " { " f"{sched[0][0]}ull,\n")
+        fd.write(f"static const schedule_t {name} =" " { " f"{sched[0][0]}ull, {len(sched)},\n")
         fd.write("    {\n")
         for i in sched:
             fd.write("        { %d, %d },\n" % (i[0] - epoch, i[1]))

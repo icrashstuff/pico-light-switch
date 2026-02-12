@@ -45,7 +45,8 @@ typedef struct
 {
     /** Seconds between 1970 and the first entry */
     uint64_t epoch;
-    schedule_entry_t schedule_entries[];
+    uint32_t num_entries;
+    schedule_entry_t entries[];
 } schedule_t;
 
 #include "schedule_level_1.h"

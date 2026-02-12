@@ -1,4 +1,4 @@
-schedule_t schedule_level_1 = { 1755186900ull,
+static const schedule_t schedule_level_1 = { 1755186900ull, 522,
     {
         { 0, 1 },
         { 32700, 0 },

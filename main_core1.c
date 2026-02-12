@@ -38,7 +38,34 @@
 
 #include <stdio.h>
 
+#include "pico/time.h"
+
 #define LOG(fmt, ...) printf("Core 1: " fmt, ##__VA_ARGS__)
+
+typedef struct
+{
+    bool on;
+    bool in_region;
+} schedule_current_state_t;
+
+static schedule_current_state_t schedule_get_state(const schedule_t* const schedule)
+{
+    const microseconds_t epoch_time = (get_unix_time() / 1000000ull) - schedule->epoch;
+
+    schedule_current_state_t r = { 0 };
+
+    for (uint32_t i = 0; i < schedule->num_entries; i++)
+    {
+        if (schedule->entries[i].timestamp < epoch_time)
+        {
+            r.on = schedule->entries[i].on;
+            if (epoch_time < (microseconds_t)(schedule->entries[i].timestamp + SCHEDULE_TRIGGER_REGION_LENGTH))
+                r.in_region = 1;
+        }
+    }
+
+    return r;
+}
 
 void main_core1()
 {
@@ -72,6 +99,10 @@ void main_core1()
         actuator_init(&level_2_off, &cinfo);
     }
 
+    LOG("Waiting for SNTP sync\n");
+    while (unix_time_get_last_sync() == 0)
+        sleep_ms(1);
+
     LOG("Waiting for actuators to retract\n");
     while (actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off) || actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off))
     {
@@ -81,5 +112,58 @@ void main_core1()
         actuator_poll(&level_2_off);
     }
 
-    LOG("Halting!\n");
+    schedule_current_state_t state_level_1 = schedule_get_state(&schedule_level_1);
+    schedule_current_state_t state_level_2 = schedule_get_state(&schedule_level_2);
+
+    LOG("Commanding actuators to resume state (if so configured)\n");
+    if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_ON_REGION)
+    {
+        if (state_level_1.on)
+        {
+            LOG("Resuming state 'ON' for level 1\n");
+            actuator_trigger(&level_1_on);
+        }
+        if (state_level_2.on)
+        {
+            LOG("Resuming state 'ON' for level 2\n");
+            actuator_trigger(&level_2_on);
+        }
+    }
+    if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION)
+    {
+        if (!state_level_1.on)
+        {
+            LOG("Resuming state 'OFF' for level 1\n");
+            actuator_trigger(&level_1_off);
+        }
+        if (!state_level_2.on)
+        {
+            LOG("Resuming state 'OFF' for level 2\n");
+            actuator_trigger(&level_2_off);
+        }
+    }
+
+    LOG("Resume on reset done, beginning loop\n");
+    while (1)
+    {
+        state_level_1 = schedule_get_state(&schedule_level_1);
+        state_level_2 = schedule_get_state(&schedule_level_2);
+
+        if (state_level_1.in_region && !(actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off)))
+        {
+            LOG("Level 1: %d\n", state_level_1.on);
+            actuator_trigger(state_level_1.on ? &level_1_on : &level_1_off);
+        }
+
+        if (state_level_2.in_region && !(actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off)))
+        {
+            LOG("Level 2: %d\n", state_level_2.on);
+            actuator_trigger(state_level_2.on ? &level_2_on : &level_2_off);
+        }
+
+        actuator_poll(&level_1_on);
+        actuator_poll(&level_1_off);
+        actuator_poll(&level_2_on);
+        actuator_poll(&level_2_off);
+    }
 }
