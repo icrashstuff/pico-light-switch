@@ -31,6 +31,7 @@
  */
 
 #include "actuator.h"
+#include "loop_measurer.h"
 #include "schedules.h"
 #include "unix_time.h"
 
@@ -66,6 +67,9 @@ static schedule_current_state_t schedule_get_state(const schedule_t* const sched
 
     return r;
 }
+
+/* Definition in main.c */
+extern loop_measure_t core1_loop_measure;
 
 void main_core1()
 {
@@ -165,5 +169,6 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
+        loop_measure_end_loop(&core1_loop_measure);
     }
 }

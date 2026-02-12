@@ -27,6 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  * @endparblock
  *
+ * Originally copied from pico-sunrise
+ *
  * @brief Interface to get and set unix time without disturbing the hardware clock (Implementation)
  */
 #include "unix_time.h"

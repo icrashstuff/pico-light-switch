@@ -35,6 +35,7 @@ add_executable(pico-light-switch
     main_core1.c
     unix_time.c
     actuator.c
+    loop_measurer.c
 )
 target_include_directories(pico-light-switch PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_compile_definitions(pico-light-switch PUBLIC

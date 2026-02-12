@@ -29,39 +29,35 @@
  *
  * Originally copied from pico-sunrise
  *
- * @brief Interface to get and set unix time without disturbing the hardware clock
+ * @brief Average loop time/Loops per second structure
  */
-#pragma once
+#include "loop_measurer.h"
+#include "config.h"
 
-#include <stdint.h>
+#include "hardware/timer.h"
 
-#define MICROSECONDS_PER_SECOND ((microseconds_t)(1000ll * 1000ll))
-#define MICROSECONDS_PER_MINUTE ((microseconds_t)(60ll * MICROSECONDS_PER_SECOND))
-#define MICROSECONDS_PER_HOUR ((microseconds_t)(60ll * MICROSECONDS_PER_MINUTE))
-#define MICROSECONDS_PER_DAY ((microseconds_t)(24ll * MICROSECONDS_PER_HOUR))
+loop_measure_t loop_measure_init()
+{
+    loop_measure_t r = {};
+    r.last_push = ~0;
+    return r;
+}
 
-typedef int64_t microseconds_t;
+void loop_measure_end_loop(loop_measure_t* obj)
+{
+    uint64_t cur_time = time_us_64();
+    if (obj->last_push == ~0ull)
+        obj->last_push = cur_time;
 
-/**
- * Gets current unix time
- *
- * @returns Microseconds since 1970
- */
-microseconds_t get_unix_time();
+    obj->loop_times[obj->loop_times_pos++] = cur_time - obj->last_push;
+    obj->loop_times_pos %= LOOP_AVERAGE_SAMPLE_COUNT;
+    obj->last_push = cur_time;
 
-/**
- * Gets last time sync value
- *
- * @returns Latest value passed to `set_unix_time`
- */
-microseconds_t unix_time_get_last_sync();
+    microseconds_t new_average_loop_time = 0;
+    for (uint32_t i = 0; i < LOOP_AVERAGE_SAMPLE_COUNT; i++)
+        new_average_loop_time += obj->loop_times[i];
+    new_average_loop_time /= (microseconds_t)(LOOP_AVERAGE_SAMPLE_COUNT);
 
-/**
- * Sets unix time
- */
-void set_unix_time(const microseconds_t microseconds_since_1970);
-
-/**
- * Initializes internal mutex
- */
-void init_unix_time();
+    obj->average_loop_time = new_average_loop_time;
+    obj->loops_per_second = ((double)(MICROSECONDS_PER_SECOND)) / ((double)(obj->average_loop_time));
+}

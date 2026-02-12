@@ -50,6 +50,7 @@
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
 
+#include "loop_measurer.h"
 #include "unix_time.h"
 
 #define LOG(fmt, ...) printf("Core 0: " fmt, ##__VA_ARGS__)
@@ -100,11 +101,17 @@ static void setup_status()
 
 extern void main_core1(void);
 
+loop_measure_t core0_loop_measure;
+loop_measure_t core1_loop_measure;
+
 int main()
 {
     stdio_init_all();
 
     printf("\n\nBegin boot\npico-light-switch %s %s\n\n", __DATE__, __TIME__);
+
+    core0_loop_measure = loop_measure_init();
+    core1_loop_measure = loop_measure_init();
 
     LOG("Initializing unix time\n");
     init_unix_time();
@@ -152,11 +159,14 @@ int main()
         status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
         status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
         status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
+        status("loops/sec core0: %.3f\n", core0_loop_measure.loops_per_second);
+        status("loops/sec core1: %.3f\n", core1_loop_measure.loops_per_second);
 
         cyw43_arch_poll();
 
         if (time_us_64() > REBOOT_INTERVAL)
             die();
+        loop_measure_end_loop(&core0_loop_measure);
     }
 
     cyw43_arch_lwip_begin();
