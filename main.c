@@ -128,10 +128,16 @@ int main()
 
     cyw43_arch_enable_sta_mode();
 
-    LOG("Connecting to SSID: '%s'\n", WIFI_SSID);
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH_MODE, 30000))
+    const char* ssid = WIFI_SSID;
+    const char* password = WIFI_PASSWORD;
+
+    if (password && strlen(password) == 0)
+        password = NULL;
+
+    LOG("Connecting to SSID: '%s'\n", ssid);
+    if (cyw43_arch_wifi_connect_timeout_ms(ssid, password, WIFI_AUTH_MODE, 30000))
     {
-        printf("Failed to connect to SSID: '%s'!\n", WIFI_SSID);
+        printf("Failed to connect to SSID: '%s'!\n", ssid);
         die();
     }
 
