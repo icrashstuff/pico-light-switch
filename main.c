@@ -125,6 +125,8 @@ int main()
         LOG("Failed to initialise cyw43_arch!\n");
         die();
     }
+    /* Activate status led after cyw43 init so there is some indication the program is running */
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
     cyw43_arch_enable_sta_mode();
 
