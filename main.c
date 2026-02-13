@@ -107,9 +107,8 @@ loop_measure_t core1_loop_measure;
 int main()
 {
     stdio_init_all();
-    /* Sleep to raise chances that USB serial won't miss early messages,
-     * tud_cdc_connected() should be used instead, but I'm lazy - Ian 2026-02-12 */
-    sleep_ms(1000);
+    while (!stdio_usb_connected() && time_us_64() < MAX_WAIT_USB_STDIO)
+        sleep_ms(5);
 
     printf("\n\nBegin boot\npico-light-switch %s %s\n\n", __DATE__, __TIME__);
 

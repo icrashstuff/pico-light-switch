@@ -96,6 +96,11 @@
 #define STATUS_PRINT_INTERVAL (1000ull * 1000ull)
 
 /**
+ * Maximum time (in microseconds) to wait for USB stdio to become ready
+ */
+#define MAX_WAIT_USB_STDIO (3ull * 1000ull * 1000ull)
+
+/**
  * Maximum uptime permitted before hard reset
  */
 #define REBOOT_INTERVAL (24ull * 60ull * 60ull * 1000ull * 1000ull)
