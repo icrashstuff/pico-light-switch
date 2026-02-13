@@ -163,10 +163,13 @@ int main()
         const uint64_t us_cur = get_unix_time();
         const uint64_t us_sync = unix_time_get_last_sync();
         const uint64_t us_since_last_sync = us_cur - us_sync;
-        if (us_up > SLOW_BLINK_UPTIME)
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 1000000) & 1);
+
+        /* Fast blink the status led while waiting for clock sync */
+        if (us_sync != 0)
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 750000) & 1);
         else
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 250000) & 1);
+
         status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
         status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
         status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);

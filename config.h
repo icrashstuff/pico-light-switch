@@ -100,11 +100,6 @@
  */
 #define REBOOT_INTERVAL (24ull * 60ull * 60ull * 1000ull * 1000ull)
 
-/**
- * Minimum uptime before led switches from 2 Hz blink to 0.5 Hz blink
- */
-#define SLOW_BLINK_UPTIME (1ull * 60ull * 60ull * 1000ull * 1000ull)
-
 /*
  * Number of samples to use for average loop times
  */
