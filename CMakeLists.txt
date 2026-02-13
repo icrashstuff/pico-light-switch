@@ -44,9 +44,15 @@ target_compile_definitions(pico-light-switch PUBLIC
 )
 
 
-set(WIFI_SSID     "" CACHE STRING "Wifi SSID")
-set(WIFI_PASSWORD "" CACHE STRING "Wifi password")
-set(WIFI_AUTH_MODE CYW43_AUTH_WPA2_AES_PSK CACHE STRING "Wifi authorization type (A CYW43_AUTH_* value)")
+set(WIFI_PRIMARY_SSID     "" CACHE STRING "Primary Wifi network SSID")
+set(WIFI_PRIMARY_PASSWORD "" CACHE STRING "Primary Wifi network password")
+set(WIFI_PRIMARY_AUTH_MODE CYW43_AUTH_WPA2_AES_PSK CACHE STRING "Primary Wifi network authorization type (A CYW43_AUTH_* value)")
+
+# The reason for a fallback wifi network is for the following use case:
+# Wifi network in production (primary) is different from the wifi network in testing (fallback)
+set(WIFI_FALLBACK_SSID     "" CACHE STRING "Fallback network Wifi SSID")
+set(WIFI_FALLBACK_PASSWORD "" CACHE STRING "Fallback network Wifi password")
+set(WIFI_FALLBACK_AUTH_MODE CYW43_AUTH_WPA2_AES_PSK CACHE STRING "Fallback Wifi network authorization type (A CYW43_AUTH_* value)")
 
 set(WIFI_COUNTRY_CODE "CYW43_COUNTRY_WORLDWIDE" CACHE STRING
     "Country code macro to use for cyw43 wifi (see $PICO_SDK_PATH/lib/cyw43-driver/src/cyw43_country.h)"
@@ -58,9 +64,12 @@ endif()
 
 
 target_compile_definitions(pico-light-switch PRIVATE
-    WIFI_SSID=\"${WIFI_SSID}\"
-    WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-    WIFI_AUTH_MODE=${WIFI_AUTH_MODE}
+    WIFI_PRIMARY_SSID=\"${WIFI_PRIMARY_SSID}\"
+    WIFI_PRIMARY_PASSWORD=\"${WIFI_PRIMARY_PASSWORD}\"
+    WIFI_PRIMARY_AUTH_MODE=${WIFI_PRIMARY_AUTH_MODE}
+    WIFI_FALLBACK_SSID=\"${WIFI_FALLBACK_SSID}\"
+    WIFI_FALLBACK_PASSWORD=\"${WIFI_FALLBACK_PASSWORD}\"
+    WIFI_FALLBACK_AUTH_MODE=${WIFI_FALLBACK_AUTH_MODE}
     WIFI_COUNTRY_CODE=${WIFI_COUNTRY_CODE}
     WIFI_COUNTRY_CODE_STR=\"${WIFI_COUNTRY_CODE}\"
 )

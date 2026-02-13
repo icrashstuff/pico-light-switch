@@ -104,6 +104,34 @@ extern void main_core1(void);
 loop_measure_t core0_loop_measure;
 loop_measure_t core1_loop_measure;
 
+#define arraysize(X) (sizeof(X) / sizeof(*(X)))
+
+static bool connect_to_network()
+{
+    const char* ssids[] = { WIFI_PRIMARY_SSID, WIFI_FALLBACK_SSID };
+    const char* passwords[] = { WIFI_PRIMARY_PASSWORD, WIFI_FALLBACK_PASSWORD };
+    const uint32_t authmodes[] = { WIFI_PRIMARY_AUTH_MODE, WIFI_FALLBACK_AUTH_MODE };
+
+    const uint64_t connection_timeouts[] = { 7500, 15000, 30000 };
+
+    for (const uint64_t* conn_timeout = connection_timeouts; conn_timeout < connection_timeouts + arraysize(connection_timeouts); conn_timeout++)
+    {
+        for (size_t j = 0; j < arraysize(ssids); j++)
+        {
+            if (*ssids[j] == 0)
+                continue;
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN));
+            LOG("Attempting to connecting to SSID: '%s', timeout=%llums, authmode=0x%08x\n", ssids[j], *conn_timeout, authmodes[j]);
+            if (cyw43_arch_wifi_connect_timeout_ms(ssids[j], *passwords[j] != '\0' ? passwords[j] : NULL, authmodes[j], *conn_timeout))
+                LOG("Failed to connect to SSID: '%s'!\n", ssids[j]);
+            else
+                return true;
+        }
+    }
+
+    return false;
+}
+
 int main()
 {
     stdio_init_all();
@@ -127,21 +155,14 @@ int main()
         LOG("Failed to initialise cyw43_arch!\n");
         die();
     }
-    /* Activate status led after cyw43 init so there is some indication the program is running */
+    /* Activate status led after cyw43 init so there is some indication the pico is online */
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
     cyw43_arch_enable_sta_mode();
 
-    const char* ssid = WIFI_SSID;
-    const char* password = WIFI_PASSWORD;
-
-    if (password && strlen(password) == 0)
-        password = NULL;
-
-    LOG("Connecting to SSID: '%s'\n", ssid);
-    if (cyw43_arch_wifi_connect_timeout_ms(ssid, password, WIFI_AUTH_MODE, 30000))
+    if (!connect_to_network())
     {
-        printf("Failed to connect to SSID: '%s'!\n", ssid);
+        LOG("Failed to connect to a network, resetting!\n");
         die();
     }
 
