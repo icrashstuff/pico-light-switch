@@ -105,7 +105,13 @@ void main_core1()
 
     LOG("Waiting for SNTP sync\n");
     while (unix_time_get_last_sync() == 0)
+    {
+        actuator_poll(&level_1_on);
+        actuator_poll(&level_1_off);
+        actuator_poll(&level_2_on);
+        actuator_poll(&level_2_off);
         sleep_ms(1);
+    }
 
     LOG("Waiting for actuators to retract\n");
     while (actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off) || actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off))
@@ -114,6 +120,7 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
+        sleep_ms(1);
     }
 
     schedule_current_state_t state_level_1 = schedule_get_state(&schedule_level_1);
