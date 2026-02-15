@@ -37,6 +37,7 @@
 
 #include "config.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "pico/time.h"
@@ -47,29 +48,104 @@ typedef struct
 {
     bool on;
     bool in_region;
+
+    /** Starting Timestamp (in seconds since 1970-01-01) of current region */
+    uint64_t timestamp_region_start;
+    /** Timestamp (in seconds since 1970-01-01) of the next "OFF" region */
+    uint64_t timestamp_region_next_off;
+    /** Timestamp (in seconds since 1970-01-01) of the next "ON" region */
+    uint64_t timestamp_region_next_on;
 } schedule_current_state_t;
 
-static schedule_current_state_t schedule_get_state(const schedule_t* const schedule)
+schedule_current_state_t schedule_get_state(const schedule_t* const schedule)
 {
     const microseconds_t epoch_time = (get_unix_time() / 1000000ull) - schedule->epoch;
 
     schedule_current_state_t r = { 0 };
+    r.timestamp_region_next_off = UINT64_MAX;
+    r.timestamp_region_next_on = UINT64_MAX;
 
     for (uint32_t i = 0; i < schedule->num_entries; i++)
     {
         if (schedule->entries[i].timestamp < epoch_time)
         {
             r.on = schedule->entries[i].on;
+            r.timestamp_region_start = (uint64_t)(schedule->entries[i].timestamp) + schedule->epoch;
             if (epoch_time < (microseconds_t)(schedule->entries[i].timestamp + SCHEDULE_TRIGGER_REGION_LENGTH))
                 r.in_region = 1;
+        }
+        else
+        {
+            if (schedule->entries[i].on)
+            {
+                if (r.timestamp_region_next_on == UINT64_MAX)
+                    r.timestamp_region_next_on = (uint64_t)(schedule->entries[i].timestamp) + schedule->epoch;
+            }
+            else
+            {
+                if (r.timestamp_region_next_off == UINT64_MAX)
+                    r.timestamp_region_next_off = (uint64_t)(schedule->entries[i].timestamp) + schedule->epoch;
+            }
         }
     }
 
     return r;
 }
 
+static int status_impl_dummy_func(const char* fmt, va_list va)
+{
+    (void)fmt;
+    (void)va;
+    return 0;
+}
+
+static int (*status_impl)(const char* fmt, va_list vlist) = vprintf;
+
+#if defined(__GNUC__) || defined(__clang__)
+#define formatting_attribute(fmtargnumber) __attribute__((format(__printf__, fmtargnumber, fmtargnumber + 1)))
+#endif
+static formatting_attribute(1) int status(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int r = status_impl(fmt, args);
+    va_end(args);
+    return r;
+}
+
+static void setup_status()
+{
+    static uint64_t last_status_time = 0;
+    const uint64_t loop_start_time = time_us_64();
+    if (loop_start_time / STATUS_PRINT_INTERVAL != last_status_time / STATUS_PRINT_INTERVAL)
+    {
+        status_impl = vprintf;
+        last_status_time = loop_start_time;
+    }
+    else
+        status_impl = status_impl_dummy_func;
+}
+
 /* Definition in main.c */
+extern loop_measure_t core0_loop_measure;
 extern loop_measure_t core1_loop_measure;
+
+static void status_header()
+{
+    setup_status();
+    const uint64_t us_up = time_us_64();
+    const uint64_t us_cur = get_unix_time();
+    const uint64_t us_sync = unix_time_get_last_sync();
+    const uint64_t us_since_last_sync = us_cur - us_sync;
+
+    status("\n\n\n==> Basic Status\n");
+
+    status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
+    status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
+    status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
+    status("loops/sec core0: %.3f\n", core0_loop_measure.loops_per_second);
+    status("loops/sec core1: %.3f\n", core1_loop_measure.loops_per_second);
+}
 
 void main_core1()
 {
@@ -110,6 +186,7 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
+        status_header();
         sleep_ms(1);
     }
 
@@ -120,6 +197,7 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
+        status_header();
         sleep_ms(1);
     }
 
@@ -157,6 +235,7 @@ void main_core1()
     LOG("Resume on reset done, beginning loop\n");
     while (1)
     {
+        status_header();
         state_level_1 = schedule_get_state(&schedule_level_1);
         state_level_2 = schedule_get_state(&schedule_level_2);
 

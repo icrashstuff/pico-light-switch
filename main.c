@@ -65,40 +65,6 @@
         tight_loop_contents();
 }
 
-static int status_impl_dummy_func(const char* fmt, va_list va)
-{
-    (void)fmt;
-    (void)va;
-    return 0;
-}
-
-static int (*status_impl)(const char* fmt, va_list vlist) = vprintf;
-
-#if defined(__GNUC__) || defined(__clang__)
-#define formatting_attribute(fmtargnumber) __attribute__((format(__printf__, fmtargnumber, fmtargnumber + 1)))
-#endif
-static formatting_attribute(1) int status(const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    int r = status_impl(fmt, args);
-    va_end(args);
-    return r;
-}
-
-static void setup_status()
-{
-    static uint64_t last_status_time = 0;
-    const uint64_t loop_start_time = time_us_64();
-    if (loop_start_time / STATUS_PRINT_INTERVAL != last_status_time / STATUS_PRINT_INTERVAL)
-    {
-        status_impl = vprintf;
-        last_status_time = loop_start_time;
-    }
-    else
-        status_impl = status_impl_dummy_func;
-}
-
 extern void main_core1(void);
 
 loop_measure_t core0_loop_measure;
@@ -178,23 +144,11 @@ int main()
     LOG("Setup done, beginning loop\n");
     while (1)
     {
-        setup_status();
-        const uint64_t us_up = time_us_64();
-        const uint64_t us_cur = get_unix_time();
-        const uint64_t us_sync = unix_time_get_last_sync();
-        const uint64_t us_since_last_sync = us_cur - us_sync;
-
         /* Fast blink the status led while waiting for clock sync */
-        if (us_sync != 0)
+        if (unix_time_get_last_sync() != 0)
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 750000) & 1);
         else
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, (time_us_64() / 250000) & 1);
-
-        status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
-        status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
-        status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
-        status("loops/sec core0: %.3f\n", core0_loop_measure.loops_per_second);
-        status("loops/sec core1: %.3f\n", core1_loop_measure.loops_per_second);
 
         cyw43_arch_poll();
 
