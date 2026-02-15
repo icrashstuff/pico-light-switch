@@ -239,6 +239,21 @@ void main_core1()
         state_level_1 = schedule_get_state(&schedule_level_1);
         state_level_2 = schedule_get_state(&schedule_level_2);
 
+        uint64_t unix_time = get_unix_time() / 1000000;
+
+        status("\n==> Schedule Status\n");
+        status("Level 1 state:     %d\n", state_level_1.on);
+        status("Level 1 in_region: %d\n", state_level_1.in_region);
+        status("Level 1 cur start: %llu (%llus ago)\n", state_level_1.timestamp_region_start, unix_time - state_level_1.timestamp_region_start);
+        status("Level 1 next on:   %llu (in %llus)\n", state_level_1.timestamp_region_next_on, state_level_1.timestamp_region_next_on - unix_time);
+        status("Level 1 next off:  %llu (in %llus)\n", state_level_1.timestamp_region_next_off, state_level_1.timestamp_region_next_off - unix_time);
+
+        status("Level 2 state:     %d\n", state_level_2.on);
+        status("Level 2 in_region: %d\n", state_level_2.in_region);
+        status("Level 2 cur start: %llu (%llus ago)\n", state_level_2.timestamp_region_start, unix_time - state_level_2.timestamp_region_start);
+        status("Level 2 next on:   %llu (in %llus)\n", state_level_2.timestamp_region_next_on, state_level_2.timestamp_region_next_on - unix_time);
+        status("Level 2 next off:  %llu (in %llus)\n", state_level_2.timestamp_region_next_off, state_level_2.timestamp_region_next_off - unix_time);
+
         if (state_level_1.in_region && !(actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off)))
         {
             LOG("Level 1: %d\n", state_level_1.on);
