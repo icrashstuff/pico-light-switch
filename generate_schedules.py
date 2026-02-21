@@ -41,10 +41,25 @@ def drange(y1: int, m1: int, d1: int,
         cur = cur + datetime.timedelta(days=1)
     return l
 
+def dtrange(start : datetime.datetime,
+           end: datetime.datetime
+           ) -> list[datetime.datetime]:
+    cur = start
+    l = []
+    while (cur <= end):
+        l.append(cur)
+        cur = cur + datetime.timedelta(days=1)
+    return l
+
 schedule_start = d(2025, 8, 14)
 schedule_end = d(2026, 5, 22)
 
+schedule_true_start = schedule_start - datetime.timedelta(weeks=16)
+schedule_true_end = schedule_end + datetime.timedelta(weeks=16)
+
 schedule_exceptions = [
+    *dtrange(schedule_true_start, schedule_start - datetime.timedelta(days=1)), # Schedule header (Summer break)
+    d(2025,  9,  1), # Labor day
     d(2025,  9,  1), # Labor day
     d(2025,  9, 15), # Reads Act
     d(2025, 11,  3), # PC
@@ -58,10 +73,33 @@ schedule_exceptions = [
     d(2026,  2, 16), # PC
     *drange(2026, 3, 6, 2026, 3, 13), # Spring break
     d(2026,  5,  1), # PL
+    *dtrange(schedule_end + datetime.timedelta(days=1), schedule_true_end), # Schedule footer (Summer break)
 ]
 
 def t(h: int, m: int) -> datetime.timedelta:
     return datetime.timedelta(hours=h, minutes=m)
+
+# Used on schedule_exceptions days, regardless of level
+time_on_exercise = [
+    [        ], # Sunday
+    [        ], # Monday
+    [t(7,  5)], # Tuesday
+    [        ], # Wednesday
+    [        ], # Thursday
+    [        ], # Friday
+    [        ]  # Saturday
+]
+
+# Used on schedule_exceptions days, regardless of level
+time_off_exercise = [
+    [        ], # Sunday
+    [        ], # Monday
+    [t(7, 10)], # Tuesday
+    [        ], # Wednesday
+    [        ], # Thursday
+    [        ], # Friday
+    [        ]  # Saturday
+]
 
 time_on_level_2 = [
     [        ], # Sunday
@@ -106,18 +144,25 @@ time_off_level_1 = [
 def generate_schedule(time_on:  list[list[datetime.timedelta]],
                       time_off: list[list[datetime.timedelta]]
                       ) -> list[tuple[int, bool]]:
-    cur = schedule_start
+    cur = schedule_true_start
     out = []
-    while(cur <= schedule_end):
+    while(cur <= schedule_true_end):
+        day_of_week = (cur.weekday() + 1) % 7
         if(cur not in schedule_exceptions):
-            day_of_week = (cur.weekday() + 1) % 7
             for i in time_on[day_of_week]:
                 out.append((int((cur + i).timestamp()), 1))
             for i in time_off[day_of_week]:
                 out.append((int((cur + i).timestamp()), 0))
+        else:
+            for i in time_on_exercise[day_of_week]:
+                out.append((int((cur + i).timestamp()), 1))
+            for i in time_off_exercise[day_of_week]:
+                out.append((int((cur + i).timestamp()), 0))
 
         cur = cur + datetime.timedelta(days=1)
+
     return out
+    return sorted(out, key=lambda x: x[0])
 
 def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
     with open(f"{name}.h", 'w') as fd:
