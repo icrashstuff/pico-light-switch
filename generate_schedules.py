@@ -150,14 +150,14 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
         day_of_week = (cur.weekday() + 1) % 7
         if(cur not in schedule_exceptions):
             for i in time_on[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1))
+                out.append((int((cur + i).timestamp()), 1, cur + i))
             for i in time_off[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0))
+                out.append((int((cur + i).timestamp()), 0, cur + i))
         else:
             for i in time_on_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1))
+                out.append((int((cur + i).timestamp()), 1, cur + i))
             for i in time_off_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0))
+                out.append((int((cur + i).timestamp()), 0, cur + i))
 
         cur = cur + datetime.timedelta(days=1)
 
@@ -170,7 +170,7 @@ def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
         fd.write(f"static const schedule_t {name} =" " { " f"{sched[0][0]}ull, {len(sched)},\n")
         fd.write("    {\n")
         for i in sched:
-            fd.write("        { %d, %d },\n" % (i[0] - epoch, i[1]))
+            fd.write("        { %d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2].strftime("%Y-%m-%d %H:%M:%S %:z")))
         fd.write("    } };\n")
 
 if __name__ == '__main__':
