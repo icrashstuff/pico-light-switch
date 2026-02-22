@@ -140,6 +140,42 @@ static PIO led_pio = {};
 static uint led_sm = {};
 static uint led_offset = {};
 
+static char fdelta_buf[128] = "";
+/**
+ * Format microseconds value as "DD:HH:MM:SS.SSSSSS"
+ *
+ * @param us Time-delta to format
+ *
+ * @returns Formatted time-delta (WARNING: The return value is invalidated with a subsequent calls to any fdelta_* function)
+ */
+static char* fdelta_us(const uint64_t us)
+{
+    uint64_t s = us / 1000000ull;
+    uint64_t m = s / 60ull;
+    uint64_t h = m / 60ull;
+    uint64_t d = h / 24ull;
+
+    snprintf(fdelta_buf, sizeof(fdelta_buf), "%02llu:%02llu:%02llu:%02llu.%06llu", d, h % 24ull, m % 60ull, s % 60ull, us % 1000000ull);
+    return fdelta_buf;
+}
+
+/**
+ * Format seconds value as "DD:HH:MM:SS"
+ *
+ * @param s Time-delta to format
+ *
+ * @returns Formatted time-delta (WARNING: The return value is invalidated with a subsequent calls to any fdelta_* function)
+ */
+static char* fdelta_s(const uint64_t s)
+{
+    uint64_t m = s / 60ull;
+    uint64_t h = m / 60ull;
+    uint64_t d = h / 24ull;
+
+    snprintf(fdelta_buf, sizeof(fdelta_buf), "%02llu:%02llu:%02llu:%02llu", d, h % 24ull, m % 60ull, s % 60ull);
+    return fdelta_buf;
+}
+
 static void minimal_status()
 {
     setup_status();
@@ -152,8 +188,8 @@ static void minimal_status()
 
     if (!core0_connected)
         status("Connect attempt: %d\n", core0_connection_attempt);
-    status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
-    status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
+    status("Uptime:          %s\n", fdelta_us(us_up));
+    status("Last clock sync: %llu.%06llu (%s ago)\n", us_sync / 1000000, us_sync % 1000000, fdelta_us(us_since_last_sync));
     status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
     status("loops/sec core0: %.3f\n", core0_loop_measure.loops_per_second);
     status("loops/sec core1: %.3f\n", core1_loop_measure.loops_per_second);
@@ -308,15 +344,15 @@ void main_core1()
         status("\n==> Schedule Status\n");
         status("Level 1 state:     %d\n", state_level_1.on);
         status("Level 1 in_region: %d\n", state_level_1.in_region);
-        status("Level 1 cur start: %llu (%llus ago)\n", state_level_1.timestamp_region_start, unix_time - state_level_1.timestamp_region_start);
-        status("Level 1 next on:   %llu (in %llus)\n", state_level_1.timestamp_region_next_on, state_level_1.timestamp_region_next_on - unix_time);
-        status("Level 1 next off:  %llu (in %llus)\n", state_level_1.timestamp_region_next_off, state_level_1.timestamp_region_next_off - unix_time);
+        status("Level 1 cur start: %llu (%s ago)\n", state_level_1.timestamp_region_start, fdelta_s(unix_time - state_level_1.timestamp_region_start));
+        status("Level 1 next on:   %llu (in %s)\n", state_level_1.timestamp_region_next_on, fdelta_s(state_level_1.timestamp_region_next_on - unix_time));
+        status("Level 1 next off:  %llu (in %s)\n", state_level_1.timestamp_region_next_off, fdelta_s(state_level_1.timestamp_region_next_off - unix_time));
 
         status("Level 2 state:     %d\n", state_level_2.on);
         status("Level 2 in_region: %d\n", state_level_2.in_region);
-        status("Level 2 cur start: %llu (%llus ago)\n", state_level_2.timestamp_region_start, unix_time - state_level_2.timestamp_region_start);
-        status("Level 2 next on:   %llu (in %llus)\n", state_level_2.timestamp_region_next_on, state_level_2.timestamp_region_next_on - unix_time);
-        status("Level 2 next off:  %llu (in %llus)\n", state_level_2.timestamp_region_next_off, state_level_2.timestamp_region_next_off - unix_time);
+        status("Level 2 cur start: %llu (%s ago)\n", state_level_2.timestamp_region_start, fdelta_s(unix_time - state_level_2.timestamp_region_start));
+        status("Level 2 next on:   %llu (in %s)\n", state_level_2.timestamp_region_next_on, fdelta_s(state_level_2.timestamp_region_next_on - unix_time));
+        status("Level 2 next off:  %llu (in %s)\n", state_level_2.timestamp_region_next_off, fdelta_s(state_level_2.timestamp_region_next_off - unix_time));
 
         if (state_level_1.in_region && !(actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off)))
         {
