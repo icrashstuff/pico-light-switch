@@ -178,7 +178,8 @@ static void minimal_status()
     g = _clamp(g, 0.0, 1.0);
     b = _clamp(b, 0.0, 1.0);
 
-    double heartbeat = sin(6.28318530718 * (double)((us_up / 1000ull) % ((uint64_t)(WS2812_STATUS_HEARTBEAT_PERIOD))) / ((double)(WS2812_STATUS_HEARTBEAT_PERIOD)) * 0.3125 + 0.6875;
+    double heartbeat_time = (double)((us_up / 1000ull) % ((uint64_t)(WS2812_STATUS_HEARTBEAT_PERIOD))) / ((double)(WS2812_STATUS_HEARTBEAT_PERIOD));
+    double heartbeat = sin(6.28318530718 * heartbeat_time) * 0.3125 + 0.6875;
 
     r *= heartbeat;
     g *= heartbeat;
