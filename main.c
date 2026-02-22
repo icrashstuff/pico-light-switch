@@ -35,7 +35,13 @@
  *
  * @par Parts required
  * - Raspberry Pi Pico 2 W\n
- * - A linear actuator
+ * - Linear actuator(s)\n
+ * - Relay boards\n
+ *
+ * @par Parts I personally used
+ * - Raspberry Pi Pico 2 W\n
+ * - FD17 Linear actuator (FD17-12-15-110.160-60)\n
+ * - Waveshare Pico-Relay-B (https://www.waveshare.com/pico-relay-b.htm)\n
  *
  * @par Configuration
  * @ref config.c

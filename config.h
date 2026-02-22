@@ -36,24 +36,24 @@
  ******************************************************/
 
 /* GPIO pin that signals actuator extension for "LEVEL 1 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_ON_EXTEND 10
+#define ACTUATOR_GPIO_LEVEL_1_ON_EXTEND 21
 /* GPIO pin that signals actuator retraction for "LEVEL 1 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_ON_RETRACT 11
+#define ACTUATOR_GPIO_LEVEL_1_ON_RETRACT 20
 
 /* GPIO pin that signals actuator extension for "LEVEL 1 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_OFF_EXTEND 12
+#define ACTUATOR_GPIO_LEVEL_1_OFF_EXTEND 19
 /* GPIO pin that signals actuator retraction for "LEVEL 1 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_OFF_RETRACT 13
+#define ACTUATOR_GPIO_LEVEL_1_OFF_RETRACT 18
 
 /* GPIO pin that signals actuator extension for "LEVEL 2 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_ON_EXTEND 18
+#define ACTUATOR_GPIO_LEVEL_2_ON_EXTEND 17
 /* GPIO pin that signals actuator retraction for "LEVEL 2 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_ON_RETRACT 19
+#define ACTUATOR_GPIO_LEVEL_2_ON_RETRACT 16
 
 /* GPIO pin that signals actuator extension for "LEVEL 2 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_OFF_EXTEND 20
+#define ACTUATOR_GPIO_LEVEL_2_OFF_EXTEND 14
 /* GPIO pin that signals actuator retraction for "LEVEL 2 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT 21
+#define ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT 15
 
 /** Time (in microseconds) for full actuator travel */
 #define ACTUATOR_TRAVEL_TIME (10ull * 1000ull * 1000ull)
@@ -62,10 +62,10 @@
 #define ACTUATOR_REST_TIME (500ull * 1000ull)
 
 /** Logic level that must be put to "extend" gpio pin for actuator retraction to occur */
-#define ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND 0
+#define ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND 1
 
 /** Logic level that must be put to "retract" gpio pin for actuator retraction to occur */
-#define ACTUATOR_ACTIVE_LOGIC_LEVEL_RETRACT 0
+#define ACTUATOR_ACTIVE_LOGIC_LEVEL_RETRACT 1
 
 /******************************************************
  *                  SCHEDULE CONFIG                   *
