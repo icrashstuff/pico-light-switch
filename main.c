@@ -71,6 +71,9 @@
         tight_loop_contents();
 }
 
+/* Defined in void main_core1.c */
+extern uint32_t core0_connection_attempt;
+extern bool core0_connected;
 extern void main_core1(void);
 
 loop_measure_t core0_loop_measure;
@@ -98,6 +101,7 @@ static bool connect_to_network()
                 LOG("Failed to connect to SSID: '%s'!\n", ssids[j]);
             else
                 return true;
+            core0_connection_attempt++;
         }
     }
 
@@ -137,6 +141,7 @@ int main()
         LOG("Failed to connect to a network, resetting!\n");
         die();
     }
+    core0_connected = 1;
 
     LOG("Initializing SNTP\n");
     cyw43_arch_lwip_begin();

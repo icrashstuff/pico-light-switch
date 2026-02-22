@@ -37,10 +37,13 @@
 
 #include "config.h"
 
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "pico/time.h"
+
+#include "ws2812.pio.h"
 
 #define LOG(fmt, ...) printf("Core 1: " fmt, ##__VA_ARGS__)
 
@@ -130,7 +133,14 @@ static void setup_status()
 extern loop_measure_t core0_loop_measure;
 extern loop_measure_t core1_loop_measure;
 
-static void status_header()
+uint32_t core0_connection_attempt = 0;
+bool core0_connected = false;
+
+static PIO led_pio = {};
+static uint led_sm = {};
+static uint led_offset = {};
+
+static void minimal_status()
 {
     setup_status();
     const uint64_t us_up = time_us_64();
@@ -140,16 +150,69 @@ static void status_header()
 
     status("\n\n\n==> Basic Status\n");
 
+    if (!core0_connected)
+        status("Connect attempt: %d\n", core0_connection_attempt);
     status("Uptime:          %llu.%06llus\n", us_up / 1000000, us_up % 1000000);
     status("Last clock sync: %llu.%06llu (%llus ago)\n", us_sync / 1000000, us_sync % 1000000, us_since_last_sync / 1000000);
     status("Current:         %llu.%06llu\n", us_cur / 1000000, us_cur % 1000000);
     status("loops/sec core0: %.3f\n", core0_loop_measure.loops_per_second);
     status("loops/sec core1: %.3f\n", core1_loop_measure.loops_per_second);
+
+    double r = 0.0;
+    double g = 0.0;
+    double b = 0.0;
+
+    if (!core0_connected)
+        r = 1.0;
+    else if (us_sync == 0)
+    {
+        r = 0.6875;
+        g = 0.6875;
+    }
+    else
+        g = 1.0;
+
+#define _clamp(x, a, b) (((x) < (a)) ? (a) : (((x) > (b)) ? (b) : (x)))
+
+    r = _clamp(r, 0.0, 1.0);
+    g = _clamp(g, 0.0, 1.0);
+    b = _clamp(b, 0.0, 1.0);
+
+    double heartbeat = sin(6.28318530718 * (double)((us_up / 1000ull) % ((uint64_t)(WS2812_STATUS_HEARTBEAT_PERIOD))) / ((double)(WS2812_STATUS_HEARTBEAT_PERIOD)) * 0.3125 + 0.6875;
+
+    r *= heartbeat;
+    g *= heartbeat;
+    b *= heartbeat;
+
+    union
+    {
+        uint8_t bytes[4];
+        uint32_t word;
+    } c;
+
+    c.bytes[2] = r * 255;
+    c.bytes[3] = g * 255;
+    c.bytes[1] = b * 255;
+
+    /* Ensure WS2812 reset interval has passed */
+    static uint64_t last_us_up = 0;
+    uint64_t us_since_last = us_up - last_us_up;
+    if (us_since_last < 500)
+        sleep_us(500 - us_since_last);
+    last_us_up = us_up;
+
+    pio_sm_put_blocking(led_pio, led_sm, c.word);
 }
 
 void main_core1()
 {
     LOG("Started\n");
+
+    LOG("Initializing ws2812 status led\n");
+    pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &led_pio, &led_sm, &led_offset, WS2812_STATUS_GPIO, 1, true);
+    ws2812_program_init(led_pio, led_sm, led_offset, WS2812_STATUS_GPIO, 800000, false);
+    pio_sm_put_blocking(led_pio, led_sm, 0);
+
     struct actuator_t level_1_on;
     struct actuator_t level_1_off;
     struct actuator_t level_2_on;
@@ -186,7 +249,7 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
-        status_header();
+        minimal_status();
         sleep_ms(1);
     }
 
@@ -197,7 +260,7 @@ void main_core1()
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
         actuator_poll(&level_2_off);
-        status_header();
+        minimal_status();
         sleep_ms(1);
     }
 
@@ -235,7 +298,7 @@ void main_core1()
     LOG("Resume on reset done, beginning loop\n");
     while (1)
     {
-        status_header();
+        minimal_status();
         state_level_1 = schedule_get_state(&schedule_level_1);
         state_level_2 = schedule_get_state(&schedule_level_2);
 

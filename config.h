@@ -91,6 +91,16 @@
  ******************************************************/
 
 /**
+ * GPIO pin for the (optional) WS2812 status led
+ */
+#define WS2812_STATUS_GPIO 13
+
+/**
+ * WS2812 status led heartbeat sine wave period (in milliseconds)
+ */
+#define WS2812_STATUS_HEARTBEAT_PERIOD 2048
+
+/**
  * Minimum number of microseconds between each successive printing of program status
  */
 #define STATUS_PRINT_INTERVAL (1000ull * 1000ull)

@@ -42,7 +42,7 @@ target_compile_definitions(pico-light-switch PUBLIC
     PICO_INCLUDE_RTC_DATETIME=0
     PICO_DEBUG_MALLOC=1
 )
-
+pico_generate_pio_header(pico-light-switch ${CMAKE_CURRENT_SOURCE_DIR}/ws2812.pio OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
 set(WIFI_PRIMARY_SSID     "" CACHE STRING "Primary Wifi network SSID")
 set(WIFI_PRIMARY_PASSWORD "" CACHE STRING "Primary Wifi network password")
