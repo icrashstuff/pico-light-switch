@@ -167,11 +167,13 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
 def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
     with open(f"{name}.h", 'w') as fd:
         epoch = sched[0][0]
+        fd.write("/* clang-format off */\n")
         fd.write(f"static const schedule_t {name} =" " { " f"{sched[0][0]}ull, {len(sched)},\n")
         fd.write("    {\n")
         for i in sched:
-            fd.write("        { %d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2].strftime("%Y-%m-%d %H:%M:%S %:z")))
+            fd.write("        {% 9d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2].strftime("%Y-%m-%d %H:%M:%S %:z")))
         fd.write("    } };\n")
+        fd.write("/* clang-format on */\n")
 
 if __name__ == '__main__':
     write_schedule_header("schedule_level_1", generate_schedule(time_on_level_1, time_off_level_1))
