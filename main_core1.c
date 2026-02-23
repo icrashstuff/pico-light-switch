@@ -45,7 +45,7 @@
 
 #include "ws2812.pio.h"
 
-#define LOG(fmt, ...) printf("Core 1: " fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...) printf("Core %u: " fmt, get_core_num(), ##__VA_ARGS__)
 
 typedef struct
 {

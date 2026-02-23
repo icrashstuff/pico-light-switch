@@ -59,7 +59,7 @@
 #include "loop_measurer.h"
 #include "unix_time.h"
 
-#define LOG(fmt, ...) printf("Core 0: " fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...) printf("Core %u: " fmt, get_core_num(), ##__VA_ARGS__)
 
 [[noreturn]] void die(void)
 {
