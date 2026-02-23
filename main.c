@@ -163,8 +163,6 @@ int main()
 
         cyw43_arch_poll();
 
-        if (time_us_64() > REBOOT_INTERVAL)
-            die();
         loop_measure_end_loop(&core0_loop_measure);
     }
 

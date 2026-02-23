@@ -132,6 +132,7 @@ static void setup_status()
 /* Definition in main.c */
 extern loop_measure_t core0_loop_measure;
 extern loop_measure_t core1_loop_measure;
+[[noreturn]] extern void die(void);
 
 uint32_t core0_connection_attempt = 0;
 bool core0_connected = false;
@@ -288,6 +289,9 @@ void main_core1()
         actuator_poll(&level_2_off);
         minimal_status();
         sleep_ms(1);
+
+        if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL)
+            die();
     }
 
     LOG("Waiting for actuators to retract\n");
@@ -299,6 +303,9 @@ void main_core1()
         actuator_poll(&level_2_off);
         minimal_status();
         sleep_ms(1);
+
+        if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL)
+            die();
     }
 
     schedule_current_state_t state_level_1 = schedule_get_state(&schedule_level_1);
@@ -365,6 +372,17 @@ void main_core1()
             LOG("Level 2: %d\n", state_level_2.on);
             actuator_trigger(state_level_2.on ? &level_2_on : &level_2_off);
         }
+
+        if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL //
+            && !state_level_1.in_region //
+            && !state_level_2.in_region //
+            && !actuator_in_cycle(&level_1_on) && !actuator_in_cycle(&level_1_off) //
+            && !actuator_in_cycle(&level_2_on) && !actuator_in_cycle(&level_2_off) //
+            && state_level_1.timestamp_region_next_on - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
+            && state_level_2.timestamp_region_next_on - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
+            && state_level_1.timestamp_region_next_off - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
+            && state_level_2.timestamp_region_next_off - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION)
+            die();
 
         actuator_poll(&level_1_on);
         actuator_poll(&level_1_off);
