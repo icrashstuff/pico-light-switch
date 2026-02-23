@@ -87,7 +87,17 @@
 #define SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION 0
 
 /******************************************************
- *                    MISC CONFIG                     *
+ *                  TIMEZONE CONFIG                   *
+ ******************************************************/
+
+/** Timezone offset during daylight savings time (in seconds) */
+#define TIMEZONE_OFFSET_DT (-8ll * 60ll * 60ll)
+
+/** Timezone offset during standard time (in seconds) */
+#define TIMEZONE_OFFSET_ST (-9ll * 60ll * 60ll)
+
+/******************************************************
+ *              WS2812 STATUS LED CONFIG              *
  ******************************************************/
 
 /**
@@ -100,6 +110,10 @@
  */
 #define WS2812_STATUS_HEARTBEAT_PERIOD 2048
 
+/******************************************************
+ *                    MISC CONFIG                     *
+ ******************************************************/
+
 /**
  * Minimum number of microseconds between each successive printing of program status
  */
@@ -111,9 +125,14 @@
 #define MAX_WAIT_USB_STDIO (3ull * 1000ull * 1000ull)
 
 /**
- * Maximum uptime permitted before hard reset
+ * Maximum uptime (in seconds) permitted before hard reset
  */
-#define REBOOT_INTERVAL (24ull * 60ull * 60ull * 1000ull * 1000ull)
+#define AUTOMATIC_REBOOT_INTERVAL (24ull * 60ull * 60ull)
+
+/**
+ * Minimum amount of of time (in seconds) that must be present between now and the next actuator region for a reset to occur
+ */
+#define AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION (5ull * 60ull)
 
 /*
  * Number of samples to use for average loop times
