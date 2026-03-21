@@ -52,6 +52,7 @@
 typedef struct
 {
     bool on;
+    bool allow_resume;
     bool in_region;
 
     /** Starting Timestamp (in seconds since 1970-01-01) of current region */
@@ -75,6 +76,7 @@ schedule_current_state_t schedule_get_state(const schedule_t* const schedule)
         if (schedule->entries[i].timestamp < epoch_time)
         {
             r.on = schedule->entries[i].on;
+            r.allow_resume = schedule->entries[i].allow_resume;
             r.timestamp_region_start = (uint64_t)(schedule->entries[i].timestamp) + schedule->epoch;
             if (epoch_time < (microseconds_t)(schedule->entries[i].timestamp + SCHEDULE_TRIGGER_REGION_LENGTH))
                 r.in_region = 1;
@@ -284,12 +286,12 @@ void main_core1()
     LOG("Commanding actuators to resume state (if so configured)\n");
     if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_ON_REGION)
     {
-        if (state_level_1.on)
+        if (state_level_1.on && state_level_1.allow_resume)
         {
             LOG("Resuming state 'ON' for level 1\n");
             actuator_trigger(&level_1_on);
         }
-        if (state_level_2.on)
+        if (state_level_2.on && state_level_2.allow_resume)
         {
             LOG("Resuming state 'ON' for level 2\n");
             actuator_trigger(&level_2_on);
@@ -297,12 +299,12 @@ void main_core1()
     }
     if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION)
     {
-        if (!state_level_1.on)
+        if (!state_level_1.on && state_level_1.allow_resume)
         {
             LOG("Resuming state 'OFF' for level 1\n");
             actuator_trigger(&level_1_off);
         }
-        if (!state_level_2.on)
+        if (!state_level_2.on && state_level_2.allow_resume)
         {
             LOG("Resuming state 'OFF' for level 2\n");
             actuator_trigger(&level_2_off);

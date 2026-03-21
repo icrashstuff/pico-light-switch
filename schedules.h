@@ -37,8 +37,11 @@
 typedef struct
 {
     /** Seconds since schedule_t::epoch */
-    uint32_t timestamp : 31;
+    uint32_t timestamp : 30;
+    /** Schedule state */
     bool on : 1;
+    /** Allow actuators to resume state from reboot */
+    bool allow_resume : 1;
 } schedule_entry_t;
 
 typedef struct

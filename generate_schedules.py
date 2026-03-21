@@ -103,22 +103,32 @@ time_off_exercise = [
 
 time_on_level_2 = [
     [        ], # Sunday
-    [t(9, 55)], # Monday
-    [t(8, 55)], # Tuesday
-    [t(8, 55)], # Wednesday
-    [t(8, 55)], # Thursday
-    [t(8, 55)], # Friday
+    [t(7, 55)], # Monday
+    [t(7, 55)], # Tuesday
+    [t(7, 55)], # Wednesday
+    [t(7, 55)], # Thursday
+    [t(7, 55)], # Friday
+    [        ]  # Saturday
+]
+
+time_off_soft_level_2 = [
+    [        ], # Sunday
+    [t(16, 0)], # Monday
+    [t(16, 0)], # Tuesday
+    [t(16, 0)], # Wednesday
+    [t(16, 0)], # Thursday
+    [t(16, 0)], # Friday
     [        ]  # Saturday
 ]
 
 time_off_level_2 = [
-    [                  ], # Sunday
-    [t(16, 0), t(25, 0)], # Monday
-    [t(16, 0), t(25, 0)], # Tuesday
-    [t(16, 0), t(25, 0)], # Wednesday
-    [t(16, 0), t(25, 0)], # Thursday
-    [t(16, 0), t(25, 0)], # Friday
-    [                  ]  # Saturday
+    [        ], # Sunday
+    [t(25, 0)], # Monday
+    [t(25, 0)], # Tuesday
+    [t(25, 0)], # Wednesday
+    [t(25, 0)], # Thursday
+    [t(25, 0)], # Friday
+    [        ]  # Saturday
 ]
 
 time_on_level_1 = [
@@ -131,17 +141,28 @@ time_on_level_1 = [
     [        ]  # Saturday
 ]
 
-time_off_level_1 = [
-    [                  ], # Sunday
-    [t(17, 0), t(25, 0)], # Monday
-    [t(17, 0), t(25, 0)], # Tuesday
-    [t(17, 0), t(25, 0)], # Wednesday
-    [t(17, 0), t(25, 0)], # Thursday
-    [t(17, 0), t(25, 0)], # Friday
-    [                  ]  # Saturday
+time_off_soft_level_1 = [
+    [        ], # Sunday
+    [t(17, 0)], # Monday
+    [t(17, 0)], # Tuesday
+    [t(17, 0)], # Wednesday
+    [t(17, 0)], # Thursday
+    [t(17, 0)], # Friday
+    [        ]  # Saturday
 ]
 
-def generate_schedule(time_on:  list[list[datetime.timedelta]],
+time_off_level_1 = [
+    [        ], # Sunday
+    [t(25, 0)], # Monday
+    [t(25, 0)], # Tuesday
+    [t(25, 0)], # Wednesday
+    [t(25, 0)], # Thursday
+    [t(25, 0)], # Friday
+    [        ]  # Saturday
+]
+
+def generate_schedule(time_on: list[list[datetime.timedelta]],
+                      time_off_soft: list[list[datetime.timedelta]],
                       time_off: list[list[datetime.timedelta]]
                       ) -> list[tuple[int, bool]]:
     cur = schedule_true_start
@@ -150,18 +171,19 @@ def generate_schedule(time_on:  list[list[datetime.timedelta]],
         day_of_week = (cur.weekday() + 1) % 7
         if(cur not in schedule_exceptions):
             for i in time_on[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1, cur + i))
+                out.append((int((cur + i).timestamp()), 1, 1, cur + i))
+            for i in time_off_soft[day_of_week]:
+                out.append((int((cur + i).timestamp()), 0, 0, cur + i))
             for i in time_off[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0, cur + i))
+                out.append((int((cur + i).timestamp()), 0, 1, cur + i))
         else:
             for i in time_on_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1, cur + i))
+                out.append((int((cur + i).timestamp()), 1, 1, cur + i))
             for i in time_off_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0, cur + i))
+                out.append((int((cur + i).timestamp()), 0, 1, cur + i))
 
         cur = cur + datetime.timedelta(days=1)
 
-    return out
     return sorted(out, key=lambda x: x[0])
 
 def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
@@ -171,10 +193,10 @@ def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
         fd.write(f"static const schedule_t {name} =" " { " f"{sched[0][0]}ull, {len(sched)},\n")
         fd.write("    {\n")
         for i in sched:
-            fd.write("        {% 9d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2].strftime("%Y-%m-%d %H:%M:%S %:z")))
+            fd.write("        {% 9d, %d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2], i[3].strftime("%Y-%m-%d %H:%M:%S %:z")))
         fd.write("    } };\n")
         fd.write("/* clang-format on */\n")
 
 if __name__ == '__main__':
-    write_schedule_header("schedule_level_1", generate_schedule(time_on_level_1, time_off_level_1))
-    write_schedule_header("schedule_level_2", generate_schedule(time_on_level_2, time_off_level_2))
+    write_schedule_header("schedule_level_1", generate_schedule(time_on_level_1, time_off_soft_level_1, time_off_level_1))
+    write_schedule_header("schedule_level_2", generate_schedule(time_on_level_2, time_off_soft_level_2, time_off_level_2))
