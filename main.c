@@ -34,14 +34,15 @@
  * TODO
  *
  * @par Parts required
- * - Raspberry Pi Pico 2 W\n
+ * - An RP2350 based board\n
  * - Linear actuator(s)\n
  * - Relay boards\n
+ * - 20x4 LCD display driven by HD4478U interfaced to a PCF8574 i2c backpack\n
  *
  * @par Parts I personally used
- * - Raspberry Pi Pico 2 W\n
  * - FD17 Linear actuator (FD17-12-15-110.160-60)\n
- * - Waveshare Pico-Relay-B (https://www.waveshare.com/pico-relay-b.htm)\n
+ * - Waveshare RP2350-Relay-6CH (https://www.waveshare.com/rp2350-relay-6ch.htm?sku=32576)\n
+ * - Black on Green 20x4 LCD with PCF8574 backpack
  *
  * @par Configuration
  * @ref config.c

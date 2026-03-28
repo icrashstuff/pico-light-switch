@@ -31,6 +31,7 @@
  */
 
 #include "actuator.h"
+#include "lcd.h"
 #include "loop_measurer.h"
 #include "schedules.h"
 #include "unix_time.h"
@@ -40,6 +41,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "pico/time.h"
 
@@ -99,26 +101,55 @@ schedule_current_state_t schedule_get_state(const schedule_t* const schedule)
     return r;
 }
 
-static int status_impl_dummy_func(const char* fmt, va_list va)
-{
-    (void)fmt;
-    (void)va;
-    return 0;
-}
-
-static int (*status_impl)(const char* fmt, va_list vlist) = vprintf;
+static bool status_can_print = 0;
+static uint8_t status_lcd_page = 0;
 
 #if defined(__GNUC__) || defined(__clang__)
 #define formatting_attribute(fmtargnumber) __attribute__((format(__printf__, fmtargnumber, fmtargnumber + 1)))
 #endif
 static formatting_attribute(1) int status(const char* fmt, ...)
 {
+    if (!status_can_print)
+        return 0;
     va_list args;
     va_start(args, fmt);
-    int r = status_impl(fmt, args);
+    int r = vprintf(fmt, args);
     va_end(args);
     return r;
 }
+
+#define LCD_WIDTH 20
+
+static formatting_attribute(4) void status_lcd(uint8_t page, uint8_t line, bool center, const char* fmt, ...)
+{
+    if (!status_can_print || page != status_lcd_page)
+        return;
+    char buf[LCD_WIDTH * 2 + 4];
+    char* s = buf + LCD_WIDTH;
+    memset(buf, ' ', sizeof(buf));
+
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(s, LCD_WIDTH, fmt, args);
+    va_end(args);
+
+    size_t len = strlen(s);
+
+    if (len < LCD_WIDTH)
+    {
+        size_t shift = (LCD_WIDTH - len) / 2;
+        s -= shift;
+    }
+
+    for (size_t i = 0; i < LCD_WIDTH; i++)
+        if (s[i] == 0)
+            s[i] = ' ';
+    lcd_set_cursor(line, 0);
+    s[20] = 0;
+    lcd_string(s);
+}
+
+static void setup_status_lcd(uint8_t num_pages) { status_lcd_page = (time_us_64() / (STATUS_PRINT_INTERVAL * STATUS_LCD_INTERVALS_PER_PAGE)) % num_pages; }
 
 static void setup_status()
 {
@@ -126,11 +157,13 @@ static void setup_status()
     const uint64_t loop_start_time = time_us_64();
     if (loop_start_time / STATUS_PRINT_INTERVAL != last_status_time / STATUS_PRINT_INTERVAL)
     {
-        status_impl = vprintf;
+        status_can_print = 1;
         last_status_time = loop_start_time;
     }
     else
-        status_impl = status_impl_dummy_func;
+    {
+        status_can_print = 0;
+    }
 }
 
 /* Definition in main.c */
@@ -229,6 +262,9 @@ void main_core1()
     pio_sm_put_blocking(led_pio, led_sm, 0);
 #endif
 
+    lcd_init();
+    lcd_clear();
+
     struct actuator_t level_1_on;
     struct actuator_t level_1_off;
     struct actuator_t level_2_on;
@@ -261,6 +297,11 @@ void main_core1()
     LOG("Waiting for SNTP sync\n");
     while (unix_time_get_last_sync() == 0)
     {
+        setup_status_lcd(1);
+        status_lcd(0, 0, true, "%s", ftime_us(get_unix_time(), FBUF(0)));
+        status_lcd(0, 1, true, "Waiting for");
+        status_lcd(0, 2, true, "SNTP");
+        status_lcd(0, 3, true, "");
         actuator_poll(&level_1_on);
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
@@ -275,6 +316,11 @@ void main_core1()
     LOG("Waiting for actuators to retract\n");
     while (actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off) || actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off))
     {
+        setup_status_lcd(1);
+        status_lcd(0, 0, true, "%s", ftime_us(get_unix_time(), FBUF(0)));
+        status_lcd(0, 1, true, "Waiting for");
+        status_lcd(0, 2, true, "Actuator Retraction");
+        status_lcd(0, 3, true, "");
         actuator_poll(&level_1_on);
         actuator_poll(&level_1_off);
         actuator_poll(&level_2_on);
@@ -327,22 +373,24 @@ void main_core1()
         uint64_t unix_time = get_unix_time() / 1000000;
 
         status("\n==> Schedule Status\n");
-        status("Level 1 state:     %d\n", state_level_1.on);
-        status("Level 1 in_region: %d\n", state_level_1.in_region);
-        status("Level 1 cur start: %s (%s ago)\n", ftime(state_level_1.timestamp_region_start, FBUF(0)),
+        status("Level 1 state:        %d\n", state_level_1.on);
+        status("Level 1 in_region:    %d\n", state_level_1.in_region);
+        status("Level 1 allow_resume: %d\n", state_level_1.allow_resume);
+        status("Level 1 cur start:    %s (%s ago)\n", ftime(state_level_1.timestamp_region_start, FBUF(0)),
             fdelta(unix_time - state_level_1.timestamp_region_start, FBUF(1)));
-        status("Level 1 next on:   %s (in %s)\n", ftime(state_level_1.timestamp_region_next_on, FBUF(0)),
+        status("Level 1 next on:      %s (in %s)\n", ftime(state_level_1.timestamp_region_next_on, FBUF(0)),
             fdelta(state_level_1.timestamp_region_next_on - unix_time, FBUF(1)));
-        status("Level 1 next off:  %s (in %s)\n", ftime(state_level_1.timestamp_region_next_off, FBUF(0)),
+        status("Level 1 next off:     %s (in %s)\n", ftime(state_level_1.timestamp_region_next_off, FBUF(0)),
             fdelta(state_level_1.timestamp_region_next_off - unix_time, FBUF(1)));
 
-        status("Level 2 state:     %d\n", state_level_2.on);
-        status("Level 2 in_region: %d\n", state_level_2.in_region);
-        status("Level 2 cur start: %s (%s ago)\n", ftime(state_level_2.timestamp_region_start, FBUF(0)),
+        status("Level 2 state:        %d\n", state_level_2.on);
+        status("Level 2 in_region:    %d\n", state_level_2.in_region);
+        status("Level 2 allow_resume: %d\n", state_level_2.allow_resume);
+        status("Level 2 cur start:    %s (%s ago)\n", ftime(state_level_2.timestamp_region_start, FBUF(0)),
             fdelta(unix_time - state_level_2.timestamp_region_start, FBUF(1)));
-        status("Level 2 next on:   %s (in %s)\n", ftime(state_level_2.timestamp_region_next_on, FBUF(0)),
+        status("Level 2 next on:      %s (in %s)\n", ftime(state_level_2.timestamp_region_next_on, FBUF(0)),
             fdelta(state_level_2.timestamp_region_next_on - unix_time, FBUF(1)));
-        status("Level 2 next off:  %s (in %s)\n", ftime(state_level_2.timestamp_region_next_off, FBUF(0)),
+        status("Level 2 next off:     %s (in %s)\n", ftime(state_level_2.timestamp_region_next_off, FBUF(0)),
             fdelta(state_level_2.timestamp_region_next_off - unix_time, FBUF(1)));
 
         if (state_level_1.in_region && !(actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off)))
@@ -356,6 +404,26 @@ void main_core1()
             LOG("Level 2: %d\n", state_level_2.on);
             actuator_trigger(state_level_2.on ? &level_2_on : &level_2_off);
         }
+
+#define ACTV_IDLE(x) ((x) ? "ACTV" : "IDLE")
+#define RESUME_NO(x) ((x) ? "RESUME" : "NO-RES")
+#define ON_OFF(x) ((x) ? "ON " : "OFF")
+
+        setup_status_lcd(3);
+        status_lcd(0, 0, true, "%s", ftime(unix_time, FBUF(0)));
+        status_lcd(0, 1, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
+        status_lcd(0, 2, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
+        status_lcd(0, 3, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+
+        status_lcd(1, 0, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
+        status_lcd(1, 1, true, "CUR:%s", ftime_compact(state_level_1.timestamp_region_start, FBUF(0)));
+        status_lcd(1, 2, true, "NON:%s", ftime_compact(state_level_1.timestamp_region_next_on, FBUF(0)));
+        status_lcd(1, 3, true, "NOF:%s", ftime_compact(state_level_1.timestamp_region_next_off, FBUF(0)));
+
+        status_lcd(2, 0, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+        status_lcd(2, 1, true, "CUR:%s", ftime_compact(state_level_2.timestamp_region_start, FBUF(0)));
+        status_lcd(2, 2, true, "NON:%s", ftime_compact(state_level_2.timestamp_region_next_on, FBUF(0)));
+        status_lcd(2, 3, true, "NOF:%s", ftime_compact(state_level_2.timestamp_region_next_off, FBUF(0)));
 
         if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL //
             && !state_level_1.in_region //

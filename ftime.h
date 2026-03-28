@@ -77,3 +77,14 @@ char* ftime_us(const uint64_t us, char* const buffer, size_t buf_size);
  * @returns Buffer pointer
  */
 char* ftime(const uint64_t s, char* const buffer, size_t buf_size);
+
+/**
+ * Format seconds since 1970 timestamp value as "YYYYMMDD HHMMSS" adjusted to the local timezone as configured in @sa config.h
+ *
+ * @param us Time-delta to format
+ * @param buffer Buffer to write to
+ * @param buf_size Buffer size
+ *
+ * @returns Buffer pointer
+ */
+char* ftime_compact(const uint64_t s, char* const buffer, size_t buf_size);

@@ -87,3 +87,13 @@ char* ftime(const uint64_t s, char* const buffer, size_t buf_size)
     snprintf(buffer, buf_size, "%04lld-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
     return buffer;
 }
+
+char* ftime_compact(const uint64_t s, char* const buffer, size_t buf_size)
+{
+    tm_64_bit_t tm = {};
+    gmtime_r_64bit(s, &tm);
+    get_tz_corrected_tm_64_bit(&tm, &tm, TIMEZONE_OFFSET_ST, TIMEZONE_OFFSET_DT);
+
+    snprintf(buffer, buf_size, "%04lld%02d%02d %02d%02d%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    return buffer;
+}

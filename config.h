@@ -99,6 +99,27 @@
 #define TIMEZONE_OFFSET_ST (-9ll * 60ll * 60ll)
 
 /******************************************************
+ *               20x04 STATUS LCD CONFIG              *
+ ******************************************************/
+
+/** I2C unit associated with @ref STATUS_LCD_I2C_SDA_PIN and @ref STATUS_LCD_I2C_SCL_PIN */
+#define STATUS_LCD_I2C_INSTANCE PICO_DEFAULT_I2C_INSTANCE()
+
+/** I2C address of status LCD */
+#define STATUS_LCD_I2C_ADDRESS 0x27u
+
+/** I2C data pin to use for status LCD */
+#define STATUS_LCD_I2C_SDA_PIN PICO_DEFAULT_I2C_SDA_PIN
+
+/** I2C clock pin to use for status LCD */
+#define STATUS_LCD_I2C_SCL_PIN PICO_DEFAULT_I2C_SCL_PIN
+
+/**
+ * Number of status prints between LCD page switches
+ */
+#define STATUS_LCD_INTERVALS_PER_PAGE 5
+
+/******************************************************
  *              WS2812 STATUS LED CONFIG              *
  ******************************************************/
 
