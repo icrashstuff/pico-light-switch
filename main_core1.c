@@ -235,8 +235,13 @@ static void minimal_status()
         uint32_t word;
     } c;
 
+#ifdef WAVESHARE_RP2350_RELAY_6CH_W
+    c.bytes[3] = r * 255;
+    c.bytes[2] = g * 255;
+#else
     c.bytes[2] = r * 255;
     c.bytes[3] = g * 255;
+#endif
     c.bytes[1] = b * 255;
 
     /* Ensure WS2812 reset interval has passed */
