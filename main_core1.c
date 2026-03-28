@@ -141,9 +141,11 @@ extern loop_measure_t core1_loop_measure;
 uint32_t core0_connection_attempt = 0;
 bool core0_connected = false;
 
+#ifdef WS2812_STATUS_GPIO
 static PIO led_pio = {};
 static uint led_sm = {};
 static uint led_offset = {};
+#endif
 
 static char fbuf0[128] = "";
 static char fbuf1[128] = "";
@@ -211,17 +213,21 @@ static void minimal_status()
         sleep_us(500 - us_since_last);
     last_us_up = us_up;
 
+#ifdef WS2812_STATUS_GPIO
     pio_sm_put_blocking(led_pio, led_sm, c.word);
+#endif
 }
 
 void main_core1()
 {
     LOG("Started\n");
 
+#ifdef WS2812_STATUS_GPIO
     LOG("Initializing ws2812 status led\n");
     pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &led_pio, &led_sm, &led_offset, WS2812_STATUS_GPIO, 1, true);
     ws2812_program_init(led_pio, led_sm, led_offset, WS2812_STATUS_GPIO, 800000, false);
     pio_sm_put_blocking(led_pio, led_sm, 0);
+#endif
 
     struct actuator_t level_1_on;
     struct actuator_t level_1_off;

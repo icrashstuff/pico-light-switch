@@ -31,6 +31,8 @@
  */
 #pragma once
 
+#include "pico.h"
+
 /******************************************************
  *                  ACTUATOR CONFIG                   *
  ******************************************************/
@@ -100,10 +102,12 @@
  *              WS2812 STATUS LED CONFIG              *
  ******************************************************/
 
+#ifdef PICO_DEFAULT_WS2812_PIN
 /**
  * GPIO pin for the (optional) WS2812 status led
  */
-#define WS2812_STATUS_GPIO 13
+#define WS2812_STATUS_GPIO PICO_DEFAULT_WS2812_PIN
+#endif
 
 /**
  * WS2812 status led heartbeat sine wave period (in milliseconds)

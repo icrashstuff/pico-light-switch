@@ -21,9 +21,12 @@
 # DEALINGS IN THE SOFTWARE.
 cmake_minimum_required(VERSION 3.13...4.0)
 
+# List doesn't actually exist until pico_sdk_init()
+set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/boards)
+
 include(pico_sdk_import.cmake)
 
-project(my_project C CXX ASM)
+project(pico-light-switch C CXX ASM)
 
 set (CMAKE_C_STANDARD 11)
 set (CMAKE_CXX_STANDARD 11)
@@ -31,6 +34,7 @@ set (CMAKE_CXX_STANDARD 11)
 pico_sdk_init()
 
 add_executable(pico-light-switch
+    lcd.c
     main.c
     main_core1.c
     unix_time.c
@@ -89,6 +93,8 @@ target_link_libraries(pico-light-switch PRIVATE
     pico_stdlib
     pico_malloc
     pico_multicore
+    hardware_pio
+    hardware_i2c
     hardware_watchdog
 )
 
