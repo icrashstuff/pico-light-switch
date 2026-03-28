@@ -111,6 +111,10 @@ static bool connect_to_network()
 
 int main()
 {
+    gpio_init(SCHEDULE_SELECT_PIN);
+    gpio_set_dir(SCHEDULE_SELECT_PIN, GPIO_IN);
+    gpio_pull_up(SCHEDULE_SELECT_PIN);
+
     stdio_init_all();
     while (!stdio_usb_connected() && time_us_64() < MAX_WAIT_USB_STDIO)
         sleep_ms(5);

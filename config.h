@@ -37,25 +37,15 @@
  *                  ACTUATOR CONFIG                   *
  ******************************************************/
 
-/* GPIO pin that signals actuator extension for "LEVEL 1 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_ON_EXTEND 21
-/* GPIO pin that signals actuator retraction for "LEVEL 1 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_ON_RETRACT 20
+/* GPIO pin that signals actuator extension for "ON" actuators */
+#define ACTUATOR_GPIO_ACT_ON_EXTEND 31
+/* GPIO pin that signals actuator retraction for "ON" actuators */
+#define ACTUATOR_GPIO_ACT_ON_RETRACT 30
 
-/* GPIO pin that signals actuator extension for "LEVEL 1 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_OFF_EXTEND 19
-/* GPIO pin that signals actuator retraction for "LEVEL 1 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_1_OFF_RETRACT 18
-
-/* GPIO pin that signals actuator extension for "LEVEL 2 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_ON_EXTEND 17
-/* GPIO pin that signals actuator retraction for "LEVEL 2 ON" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_ON_RETRACT 16
-
-/* GPIO pin that signals actuator extension for "LEVEL 2 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_OFF_EXTEND 14
-/* GPIO pin that signals actuator retraction for "LEVEL 2 OFF" actuators */
-#define ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT 15
+/* GPIO pin that signals actuator extension for "OFF" actuators */
+#define ACTUATOR_GPIO_ACT_OFF_EXTEND 29
+/* GPIO pin that signals actuator retraction for "OFF" actuators */
+#define ACTUATOR_GPIO_ACT_OFF_RETRACT 28
 
 /** Time (in microseconds) for full actuator travel */
 #define ACTUATOR_TRAVEL_TIME (10ull * 1000ull * 1000ull)
@@ -72,6 +62,16 @@
 /******************************************************
  *                  SCHEDULE CONFIG                   *
  ******************************************************/
+
+/**
+ * Schedule select pin
+ *
+ * This pin will be pulled high by default
+ *
+ * Leave pin high to select level 1 schedule
+ * Short pin low to select level 2 schedule
+ */
+#define SCHEDULE_SELECT_PIN 14
 
 /**
  * Length of time (in seconds) to repeatedly cycle the actuator when the schedule calls for an update

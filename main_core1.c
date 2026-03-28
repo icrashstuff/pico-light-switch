@@ -135,7 +135,7 @@ static formatting_attribute(4) void status_lcd(uint8_t page, uint8_t line, bool 
 
     size_t len = strlen(s);
 
-    if (len < LCD_WIDTH)
+    if (center && len < LCD_WIDTH)
     {
         size_t shift = (LCD_WIDTH - len) / 2;
         s -= shift;
@@ -259,6 +259,7 @@ static void minimal_status()
 void main_core1()
 {
     LOG("Started\n");
+    gpio_pull_up(SCHEDULE_SELECT_PIN);
 
 #ifdef WS2812_STATUS_GPIO
     LOG("Initializing ws2812 status led\n");
@@ -270,10 +271,10 @@ void main_core1()
     lcd_init();
     lcd_clear();
 
-    struct actuator_t level_1_on;
-    struct actuator_t level_1_off;
-    struct actuator_t level_2_on;
-    struct actuator_t level_2_off;
+    int schedule_num_selected = gpio_get(SCHEDULE_SELECT_PIN) ? 1 : 2;
+
+    struct actuator_t act_on;
+    struct actuator_t act_off;
     LOG("Initializing actuators\n");
     {
         struct actuator_config_t cinfo = {};
@@ -282,21 +283,13 @@ void main_core1()
         cinfo.logic_active_level_extend = ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND;
         cinfo.logic_active_level_retract = ACTUATOR_ACTIVE_LOGIC_LEVEL_RETRACT;
 
-        cinfo.gpio_extend = ACTUATOR_GPIO_LEVEL_1_ON_EXTEND;
-        cinfo.gpio_retract = ACTUATOR_GPIO_LEVEL_1_ON_RETRACT;
-        actuator_init(&level_1_on, &cinfo);
+        cinfo.gpio_extend = ACTUATOR_GPIO_ACT_ON_EXTEND;
+        cinfo.gpio_retract = ACTUATOR_GPIO_ACT_ON_RETRACT;
+        actuator_init(&act_on, &cinfo);
 
-        cinfo.gpio_extend = ACTUATOR_GPIO_LEVEL_1_OFF_EXTEND;
-        cinfo.gpio_retract = ACTUATOR_GPIO_LEVEL_1_OFF_RETRACT;
-        actuator_init(&level_1_off, &cinfo);
-
-        cinfo.gpio_extend = ACTUATOR_GPIO_LEVEL_2_ON_EXTEND;
-        cinfo.gpio_retract = ACTUATOR_GPIO_LEVEL_2_ON_RETRACT;
-        actuator_init(&level_2_on, &cinfo);
-
-        cinfo.gpio_extend = ACTUATOR_GPIO_LEVEL_2_OFF_EXTEND;
-        cinfo.gpio_retract = ACTUATOR_GPIO_LEVEL_2_OFF_RETRACT;
-        actuator_init(&level_2_off, &cinfo);
+        cinfo.gpio_extend = ACTUATOR_GPIO_ACT_OFF_EXTEND;
+        cinfo.gpio_retract = ACTUATOR_GPIO_ACT_OFF_RETRACT;
+        actuator_init(&act_off, &cinfo);
     }
 
     LOG("Waiting for SNTP sync\n");
@@ -307,10 +300,8 @@ void main_core1()
         status_lcd(0, 1, true, "Waiting for");
         status_lcd(0, 2, true, "SNTP");
         status_lcd(0, 3, true, "");
-        actuator_poll(&level_1_on);
-        actuator_poll(&level_1_off);
-        actuator_poll(&level_2_on);
-        actuator_poll(&level_2_off);
+        actuator_poll(&act_on);
+        actuator_poll(&act_off);
         minimal_status();
         sleep_ms(1);
 
@@ -319,17 +310,15 @@ void main_core1()
     }
 
     LOG("Waiting for actuators to retract\n");
-    while (actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off) || actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off))
+    while (actuator_in_cycle(&act_on) || actuator_in_cycle(&act_off))
     {
         setup_status_lcd(1);
         status_lcd(0, 0, true, "%s", ftime_us(get_unix_time(), FBUF(0)));
         status_lcd(0, 1, true, "Waiting for");
         status_lcd(0, 2, true, "Actuator Retraction");
         status_lcd(0, 3, true, "");
-        actuator_poll(&level_1_on);
-        actuator_poll(&level_1_off);
-        actuator_poll(&level_2_on);
-        actuator_poll(&level_2_off);
+        actuator_poll(&act_on);
+        actuator_poll(&act_off);
         minimal_status();
         sleep_ms(1);
 
@@ -343,28 +332,28 @@ void main_core1()
     LOG("Commanding actuators to resume state (if so configured)\n");
     if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_ON_REGION)
     {
-        if (state_level_1.on && state_level_1.allow_resume)
+        if (state_level_1.on && state_level_1.allow_resume && schedule_num_selected == 1)
         {
             LOG("Resuming state 'ON' for level 1\n");
-            actuator_trigger(&level_1_on);
+            actuator_trigger(&act_on);
         }
-        if (state_level_2.on && state_level_2.allow_resume)
+        if (state_level_2.on && state_level_2.allow_resume && schedule_num_selected == 2)
         {
             LOG("Resuming state 'ON' for level 2\n");
-            actuator_trigger(&level_2_on);
+            actuator_trigger(&act_on);
         }
     }
     if (SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION)
     {
-        if (!state_level_1.on && state_level_1.allow_resume)
+        if (!state_level_1.on && state_level_1.allow_resume && schedule_num_selected == 1)
         {
             LOG("Resuming state 'OFF' for level 1\n");
-            actuator_trigger(&level_1_off);
+            actuator_trigger(&act_off);
         }
-        if (!state_level_2.on && state_level_2.allow_resume)
+        if (!state_level_2.on && state_level_2.allow_resume && schedule_num_selected == 2)
         {
             LOG("Resuming state 'OFF' for level 2\n");
-            actuator_trigger(&level_2_off);
+            actuator_trigger(&act_off);
         }
     }
 
@@ -378,6 +367,7 @@ void main_core1()
         uint64_t unix_time = get_unix_time() / 1000000;
 
         status("\n==> Schedule Status\n");
+        status("Level 1 enabled:      %d\n", schedule_num_selected == 1);
         status("Level 1 state:        %d\n", state_level_1.on);
         status("Level 1 in_region:    %d\n", state_level_1.in_region);
         status("Level 1 allow_resume: %d\n", state_level_1.allow_resume);
@@ -388,6 +378,7 @@ void main_core1()
         status("Level 1 next off:     %s (in %s)\n", ftime(state_level_1.timestamp_region_next_off, FBUF(0)),
             fdelta(state_level_1.timestamp_region_next_off - unix_time, FBUF(1)));
 
+        status("Level 2 enabled:      %d\n", schedule_num_selected == 2);
         status("Level 2 state:        %d\n", state_level_2.on);
         status("Level 2 in_region:    %d\n", state_level_2.in_region);
         status("Level 2 allow_resume: %d\n", state_level_2.allow_resume);
@@ -398,34 +389,46 @@ void main_core1()
         status("Level 2 next off:     %s (in %s)\n", ftime(state_level_2.timestamp_region_next_off, FBUF(0)),
             fdelta(state_level_2.timestamp_region_next_off - unix_time, FBUF(1)));
 
-        if (state_level_1.in_region && !(actuator_in_cycle(&level_1_on) || actuator_in_cycle(&level_1_off)))
+        if (state_level_1.in_region && !(actuator_in_cycle(&act_on) || actuator_in_cycle(&act_off)) && schedule_num_selected == 1)
         {
             LOG("Level 1: %d\n", state_level_1.on);
-            actuator_trigger(state_level_1.on ? &level_1_on : &level_1_off);
+            actuator_trigger(state_level_1.on ? &act_on : &act_off);
         }
 
-        if (state_level_2.in_region && !(actuator_in_cycle(&level_2_on) || actuator_in_cycle(&level_2_off)))
+        if (state_level_2.in_region && !(actuator_in_cycle(&act_on) || actuator_in_cycle(&act_off)) && schedule_num_selected == 2)
         {
             LOG("Level 2: %d\n", state_level_2.on);
-            actuator_trigger(state_level_2.on ? &level_2_on : &level_2_off);
+            actuator_trigger(state_level_2.on ? &act_on : &act_off);
         }
 
 #define ACTV_IDLE(x) ((x) ? "ACTV" : "IDLE")
-#define RESUME_NO(x) ((x) ? "RESUME" : "NO-RES")
+#define RESUME_NO(x) ((x) ? "RES-Y" : "RES-N")
 #define ON_OFF(x) ((x) ? "ON " : "OFF")
 
         setup_status_lcd(3);
         status_lcd(0, 0, true, "%s", ftime(unix_time, FBUF(0)));
         status_lcd(0, 1, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
-        status_lcd(0, 2, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
-        status_lcd(0, 3, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+        if (schedule_num_selected == 1)
+            status_lcd(0, 2, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
+        else
+            status_lcd(0, 2, true, "L1: Disabled");
+        if (schedule_num_selected == 2)
+            status_lcd(0, 3, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+        else
+            status_lcd(0, 3, true, "L2: Disabled");
 
-        status_lcd(1, 0, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
+        if (schedule_num_selected == 1)
+            status_lcd(1, 0, true, "L1: %s %s %s", ACTV_IDLE(state_level_1.in_region), RESUME_NO(state_level_1.allow_resume), ON_OFF(state_level_1.on));
+        else
+            status_lcd(1, 0, true, "L1: Disabled");
         status_lcd(1, 1, true, "CUR:%s", ftime_compact(state_level_1.timestamp_region_start, FBUF(0)));
         status_lcd(1, 2, true, "NON:%s", ftime_compact(state_level_1.timestamp_region_next_on, FBUF(0)));
         status_lcd(1, 3, true, "NOF:%s", ftime_compact(state_level_1.timestamp_region_next_off, FBUF(0)));
 
-        status_lcd(2, 0, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+        if (schedule_num_selected == 2)
+            status_lcd(2, 0, true, "L2: %s %s %s", ACTV_IDLE(state_level_2.in_region), RESUME_NO(state_level_2.allow_resume), ON_OFF(state_level_2.on));
+        else
+            status_lcd(2, 0, true, "L2: Disabled");
         status_lcd(2, 1, true, "CUR:%s", ftime_compact(state_level_2.timestamp_region_start, FBUF(0)));
         status_lcd(2, 2, true, "NON:%s", ftime_compact(state_level_2.timestamp_region_next_on, FBUF(0)));
         status_lcd(2, 3, true, "NOF:%s", ftime_compact(state_level_2.timestamp_region_next_off, FBUF(0)));
@@ -433,18 +436,15 @@ void main_core1()
         if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL //
             && !state_level_1.in_region //
             && !state_level_2.in_region //
-            && !actuator_in_cycle(&level_1_on) && !actuator_in_cycle(&level_1_off) //
-            && !actuator_in_cycle(&level_2_on) && !actuator_in_cycle(&level_2_off) //
+            && !actuator_in_cycle(&act_on) && !actuator_in_cycle(&act_off) //
             && state_level_1.timestamp_region_next_on - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
             && state_level_2.timestamp_region_next_on - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
             && state_level_1.timestamp_region_next_off - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION
             && state_level_2.timestamp_region_next_off - unix_time > AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION)
             die();
 
-        actuator_poll(&level_1_on);
-        actuator_poll(&level_1_off);
-        actuator_poll(&level_2_on);
-        actuator_poll(&level_2_off);
+        actuator_poll(&act_on);
+        actuator_poll(&act_off);
         loop_measure_end_loop(&core1_loop_measure);
     }
 }
