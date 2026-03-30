@@ -296,7 +296,7 @@ void main_core1()
     while (unix_time_get_last_sync() == 0)
     {
         setup_status_lcd(1);
-        status_lcd(0, 0, true, "%s", ftime_us(get_unix_time(), FBUF(0)));
+        status_lcd(0, 0, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
         status_lcd(0, 1, true, "Waiting for");
         status_lcd(0, 2, true, "SNTP");
         status_lcd(0, 3, true, "");
@@ -313,7 +313,7 @@ void main_core1()
     while (actuator_in_cycle(&act_on) || actuator_in_cycle(&act_off))
     {
         setup_status_lcd(1);
-        status_lcd(0, 0, true, "%s", ftime_us(get_unix_time(), FBUF(0)));
+        status_lcd(0, 0, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
         status_lcd(0, 1, true, "Waiting for");
         status_lcd(0, 2, true, "Actuator Retraction");
         status_lcd(0, 3, true, "");
@@ -405,7 +405,7 @@ void main_core1()
 #define RESUME_NO(x) ((x) ? "RES-Y" : "RES-N")
 #define ON_OFF(x) ((x) ? "ON " : "OFF")
 
-        setup_status_lcd(3);
+        setup_status_lcd(4);
         status_lcd(0, 0, true, "%s", ftime(unix_time, FBUF(0)));
         status_lcd(0, 1, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
         if (schedule_num_selected == 1)
@@ -432,6 +432,11 @@ void main_core1()
         status_lcd(2, 1, true, "CUR:%s", ftime_compact(state_level_2.timestamp_region_start, FBUF(0)));
         status_lcd(2, 2, true, "NON:%s", ftime_compact(state_level_2.timestamp_region_next_on, FBUF(0)));
         status_lcd(2, 3, true, "NOF:%s", ftime_compact(state_level_2.timestamp_region_next_off, FBUF(0)));
+
+        status_lcd(3, 0, true, "%s", ftime(unix_time, FBUF(0)));
+        status_lcd(3, 1, true, "Schedule end dates");
+        status_lcd(3, 2, true, "L1: %s", ftime_compact(schedule_level_2.entries[schedule_level_2.num_entries - 1].timestamp + schedule_level_2.epoch, FBUF(0)));
+        status_lcd(3, 3, true, "L2: %s", ftime_compact(schedule_level_2.entries[schedule_level_2.num_entries - 1].timestamp + schedule_level_2.epoch, FBUF(0)));
 
         if (time_us_64() / 1000000ull > AUTOMATIC_REBOOT_INTERVAL //
             && !state_level_1.in_region //
