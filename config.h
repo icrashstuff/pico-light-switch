@@ -117,7 +117,7 @@
 /**
  * Number of status prints between LCD page switches
  */
-#define STATUS_LCD_INTERVALS_PER_PAGE 5
+#define STATUS_LCD_INTERVALS_PER_PAGE 8
 
 /******************************************************
  *              WS2812 STATUS LED CONFIG              *
