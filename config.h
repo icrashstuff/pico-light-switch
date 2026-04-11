@@ -38,14 +38,14 @@
  ******************************************************/
 
 /* GPIO pin that signals actuator extension for "ON" actuators */
-#define ACTUATOR_GPIO_ACT_ON_EXTEND 31
+#define ACTUATOR_GPIO_ACT_ON_EXTEND 26
 /* GPIO pin that signals actuator retraction for "ON" actuators */
-#define ACTUATOR_GPIO_ACT_ON_RETRACT 30
+#define ACTUATOR_GPIO_ACT_ON_RETRACT 27
 
 /* GPIO pin that signals actuator extension for "OFF" actuators */
-#define ACTUATOR_GPIO_ACT_OFF_EXTEND 29
+#define ACTUATOR_GPIO_ACT_OFF_EXTEND 28
 /* GPIO pin that signals actuator retraction for "OFF" actuators */
-#define ACTUATOR_GPIO_ACT_OFF_RETRACT 28
+#define ACTUATOR_GPIO_ACT_OFF_RETRACT 29
 
 /** Time (in microseconds) for full actuator travel */
 #define ACTUATOR_TRAVEL_TIME (10ull * 1000ull * 1000ull)
