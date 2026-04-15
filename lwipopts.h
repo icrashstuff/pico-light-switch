@@ -126,6 +126,9 @@
 
 #include "unix_time.h"
 #define SNTP_SET_SYSTEM_TIME_US(s, us) set_unix_time((s * 1000000ll) + us)
+#define SNTP_GET_SYSTEM_TIME(s, us) do { microseconds_t ts_us = get_unix_time(); s = ts_us / 1000000ll; us = ts_us % 1000000ll; } while(0);
+#define SNTP_COMP_ROUNDTRIP 1
+#define SNTP_CHECK_RESPONSE 2
 #define SNTP_SERVER_DNS 1
 #define SNTP_SERVER_ADDRESS_0 "0.pool.ntp.org"
 #define SNTP_SERVER_ADDRESS_1 "1.pool.ntp.org"
