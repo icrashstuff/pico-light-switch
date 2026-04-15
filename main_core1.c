@@ -299,8 +299,16 @@ void main_core1()
         setup_status_lcd(1);
         status_lcd(0, 0, true, "UP: %s", fdelta(time_us_64() / 1000000ull, FBUF(0)));
         status_lcd(0, 1, true, "Waiting for");
-        status_lcd(0, 2, true, "SNTP");
-        status_lcd(0, 3, true, "");
+        if (core0_connected)
+        {
+            status_lcd(0, 2, true, "SNTP");
+            status_lcd(0, 3, true, "");
+        }
+        else
+        {
+            status_lcd(0, 2, true, "Network");
+            status_lcd(0, 3, true, "Try: %u", core0_connection_attempt);
+        }
         actuator_poll(&act_on);
         actuator_poll(&act_off);
         minimal_status();
