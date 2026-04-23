@@ -38,14 +38,14 @@
  ******************************************************/
 
 /* GPIO pin that signals actuator extension for "ON" actuators */
-#define ACTUATOR_GPIO_ACT_ON_EXTEND 26
+#define ACTUATOR_GPIO_ACT_ON_EXTEND WAVESHARE_RELAY_CHANNEL_1
 /* GPIO pin that signals actuator retraction for "ON" actuators */
-#define ACTUATOR_GPIO_ACT_ON_RETRACT 27
+#define ACTUATOR_GPIO_ACT_ON_RETRACT WAVESHARE_RELAY_CHANNEL_2
 
 /* GPIO pin that signals actuator extension for "OFF" actuators */
-#define ACTUATOR_GPIO_ACT_OFF_EXTEND 28
+#define ACTUATOR_GPIO_ACT_OFF_EXTEND WAVESHARE_RELAY_CHANNEL_3
 /* GPIO pin that signals actuator retraction for "OFF" actuators */
-#define ACTUATOR_GPIO_ACT_OFF_RETRACT 29
+#define ACTUATOR_GPIO_ACT_OFF_RETRACT WAVESHARE_RELAY_CHANNEL_4
 
 /** Time (in microseconds) for full actuator travel */
 #define ACTUATOR_TRAVEL_TIME (10ull * 1000ull * 1000ull)

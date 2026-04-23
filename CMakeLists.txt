@@ -21,6 +21,21 @@
 # DEALINGS IN THE SOFTWARE.
 cmake_minimum_required(VERSION 3.13...4.0)
 
+set(RELAY_BOARD "" CACHE STRING "Waveshare board to use {\"6ch\": RP2350-Relay-6CH-W, \"8ch\": Pico-Relay-B}")
+
+if("${RELAY_BOARD}" STREQUAL "6ch")
+    set(PICO_BOARD "waveshare_rp2350_relay_6ch_w")
+    set(PICO_PLATFORM "rp2350-arm-s")
+    set(PICO_USE_FASTEST_SUPPORTED_CLOCK TRUE)
+elseif("${RELAY_BOARD}" STREQUAL "8ch")
+    set(PICO_BOARD "pico2_w")
+    set(PICO_PLATFORM "rp2350-arm-s")
+    set(PICO_USE_FASTEST_SUPPORTED_CLOCK TRUE)
+elseif("${RELAY_BOARD}" STREQUAL "MANUALLY_SPECIFIED")
+else()
+    message(FATAL_ERROR "No relay board specified/configured!")
+endif()
+
 # List doesn't actually exist until pico_sdk_init()
 set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/boards)
 
@@ -97,6 +112,34 @@ target_link_libraries(pico-light-switch PRIVATE
     hardware_i2c
     hardware_watchdog
 )
+
+if("${RELAY_BOARD}" STREQUAL "6ch")
+    target_compile_definitions(pico-light-switch PUBLIC
+        WAVESHARE_BUZZER=23
+        WAVESHARE_RELAY_CHANNEL_1=26
+        WAVESHARE_RELAY_CHANNEL_2=27
+        WAVESHARE_RELAY_CHANNEL_3=28
+        WAVESHARE_RELAY_CHANNEL_4=29
+        WAVESHARE_RELAY_CHANNEL_5=30
+        WAVESHARE_RELAY_CHANNEL_6=31
+    )
+elseif("${RELAY_BOARD}" STREQUAL "8ch")
+    target_compile_definitions(pico-light-switch PUBLIC
+        WAVESHARE_RELAY_CHANNEL_1=21
+        WAVESHARE_RELAY_CHANNEL_2=20
+        WAVESHARE_RELAY_CHANNEL_3=19
+        WAVESHARE_RELAY_CHANNEL_4=18
+        WAVESHARE_RELAY_CHANNEL_5=17
+        WAVESHARE_RELAY_CHANNEL_6=16
+        WAVESHARE_RELAY_CHANNEL_7=15
+        WAVESHARE_RELAY_CHANNEL_8=14
+        PICO_DEFAULT_WS2812_PIN=13
+        WAVESHARE_BUZZER=6
+    )
+elseif("${RELAY_BOARD}" STREQUAL "MANUALLY_SPECIFIED")
+else()
+    message(FATAL_ERROR "No relay board specified/configured!")
+endif()
 
 
 if (TARGET tinyusb_device)
