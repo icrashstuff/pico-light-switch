@@ -37,14 +37,14 @@
  *                  ACTUATOR CONFIG                   *
  ******************************************************/
 
-/* GPIO pin that signals actuator extension for "ON" actuators */
+/** GPIO pin that signals actuator extension for "ON" actuators */
 #define ACTUATOR_GPIO_ACT_ON_EXTEND WAVESHARE_RELAY_CHANNEL_1
-/* GPIO pin that signals actuator retraction for "ON" actuators */
+/** GPIO pin that signals actuator retraction for "ON" actuators */
 #define ACTUATOR_GPIO_ACT_ON_RETRACT WAVESHARE_RELAY_CHANNEL_2
 
-/* GPIO pin that signals actuator extension for "OFF" actuators */
+/** GPIO pin that signals actuator extension for "OFF" actuators */
 #define ACTUATOR_GPIO_ACT_OFF_EXTEND WAVESHARE_RELAY_CHANNEL_3
-/* GPIO pin that signals actuator retraction for "OFF" actuators */
+/** GPIO pin that signals actuator retraction for "OFF" actuators */
 #define ACTUATOR_GPIO_ACT_OFF_RETRACT WAVESHARE_RELAY_CHANNEL_4
 
 /** Time (in microseconds) for full actuator travel */
@@ -159,7 +159,7 @@
  */
 #define AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION (5ull * 60ull)
 
-/*
+/**
  * Number of samples to use for average loop times
  */
 #define LOOP_AVERAGE_SAMPLE_COUNT 256
