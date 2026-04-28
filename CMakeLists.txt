@@ -21,14 +21,10 @@
 # DEALINGS IN THE SOFTWARE.
 cmake_minimum_required(VERSION 3.13...4.0)
 
-set(RELAY_BOARD "" CACHE STRING "Waveshare board to use {\"6ch\": RP2350-Relay-6CH-W, \"8ch\": Pico-Relay-B}")
+set(RELAY_BOARD "6ch" CACHE STRING "Waveshare board to use {\"6ch\": RP2350-Relay-6CH-W}")
 
 if("${RELAY_BOARD}" STREQUAL "6ch")
     set(PICO_BOARD "waveshare_rp2350_relay_6ch_w")
-    set(PICO_PLATFORM "rp2350-arm-s")
-    set(PICO_USE_FASTEST_SUPPORTED_CLOCK TRUE)
-elseif("${RELAY_BOARD}" STREQUAL "8ch")
-    set(PICO_BOARD "pico2_w")
     set(PICO_PLATFORM "rp2350-arm-s")
     set(PICO_USE_FASTEST_SUPPORTED_CLOCK TRUE)
 elseif("${RELAY_BOARD}" STREQUAL "MANUALLY_SPECIFIED")
@@ -122,19 +118,6 @@ if("${RELAY_BOARD}" STREQUAL "6ch")
         WAVESHARE_RELAY_CHANNEL_4=29
         WAVESHARE_RELAY_CHANNEL_5=30
         WAVESHARE_RELAY_CHANNEL_6=31
-    )
-elseif("${RELAY_BOARD}" STREQUAL "8ch")
-    target_compile_definitions(pico-light-switch PUBLIC
-        WAVESHARE_RELAY_CHANNEL_1=21
-        WAVESHARE_RELAY_CHANNEL_2=20
-        WAVESHARE_RELAY_CHANNEL_3=19
-        WAVESHARE_RELAY_CHANNEL_4=18
-        WAVESHARE_RELAY_CHANNEL_5=17
-        WAVESHARE_RELAY_CHANNEL_6=16
-        WAVESHARE_RELAY_CHANNEL_7=15
-        WAVESHARE_RELAY_CHANNEL_8=14
-        PICO_DEFAULT_WS2812_PIN=13
-        WAVESHARE_BUZZER=6
     )
 elseif("${RELAY_BOARD}" STREQUAL "MANUALLY_SPECIFIED")
 else()
