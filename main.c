@@ -49,14 +49,18 @@
  */
 #include "config.h"
 
+#include "license_texts.h"
+
 #include <stdio.h>
 
+#include "hardware/i2c.h"
 #include "hardware/watchdog.h"
 #include "lwip/apps/sntp.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
 
+#include "ftime.h"
 #include "loop_measurer.h"
 #include "unix_time.h"
 
@@ -109,6 +113,73 @@ static bool connect_to_network()
     return false;
 }
 
+void dump_program_info()
+{
+    char fbuf[128];
+#define FBUF(X) fbuf##X, sizeof(fbuf##X)
+    LOG("===> Program license\n%s\n", license_program);
+    LOG("===> Pico SDK license\n%s\n", license_pico_SDK);
+    LOG("===> CYW43 license\n%s\n", license_CYW43);
+    LOG("===> Program info\n");
+    LOG("Program name:  pico-light-switch\n");
+    LOG("Compile date:  %s %s\n", __DATE__, __TIME__);
+    LOG("RELAY_BOARD:   %s\n", CMAKE_RELAY_BOARD);
+    LOG("PICO_BOARD:    %s\n", CMAKE_PICO_BOARD);
+    LOG("PICO_PLATFORM: %s\n", CMAKE_PICO_PLATFORM);
+    putc('\n', stdout);
+    LOG("===> USB config\n");
+    LOG("Manufacturer: '%s'\n", USBD_MANUFACTURER);
+    LOG("Product:      '%s'\n", USBD_PRODUCT);
+    putc('\n', stdout);
+    LOG("===> WiFi config\n");
+    LOG("Primary SSID:  '%s'\n", WIFI_PRIMARY_SSID);
+    LOG("Primary PASS:  '%s'\n", WIFI_PRIMARY_PASSWORD);
+    LOG("Primary AUTH:  0x%08x (%s)\n", WIFI_PRIMARY_AUTH_MODE, WIFI_PRIMARY_AUTH_MODE_STR);
+    LOG("Fallback SSID: '%s'\n", WIFI_FALLBACK_SSID);
+    LOG("Fallback PASS: '%s'\n", WIFI_FALLBACK_PASSWORD);
+    LOG("Fallback AUTH: 0x%08x (%s)\n", WIFI_FALLBACK_AUTH_MODE, WIFI_FALLBACK_AUTH_MODE_STR);
+    LOG("Country:       %s\n", WIFI_COUNTRY_CODE_STR);
+    putc('\n', stdout);
+    LOG("===> Actuator config\n");
+    LOG("Travel time: %s\n", fdelta_us(ACTUATOR_TRAVEL_TIME, FBUF()));
+    LOG("Rest time:   %s\n", fdelta_us(ACTUATOR_REST_TIME, FBUF()));
+    LOG("GPIO 'ON'  Extend:  %d\n", ACTUATOR_GPIO_ACT_ON_EXTEND);
+    LOG("GPIO 'ON'  Retract: %d\n", ACTUATOR_GPIO_ACT_ON_RETRACT);
+    LOG("GPIO 'OFF' Extend:  %d\n", ACTUATOR_GPIO_ACT_OFF_EXTEND);
+    LOG("GPIO 'OFF' Retract: %d\n", ACTUATOR_GPIO_ACT_OFF_RETRACT);
+    LOG("Active logic level extend:  %s\n", (ACTUATOR_ACTIVE_LOGIC_LEVEL_EXTEND) ? "HIGH" : "LOW");
+    LOG("Active logic level retract: %s\n", (ACTUATOR_ACTIVE_LOGIC_LEVEL_RETRACT) ? "HIGH" : "LOW");
+    putc('\n', stdout);
+    LOG("===> Schedule config\n");
+    LOG("Select pin: %d\n", SCHEDULE_SELECT_PIN);
+    LOG("Region trigger duration: %s\n", fdelta(SCHEDULE_TRIGGER_REGION_LENGTH, FBUF()));
+    LOG("Trigger on reset if in 'ON'  region: %d\n", SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_ON_REGION);
+    LOG("Trigger on reset if in 'OFF' region: %d\n", SCHEDULE_TRIGGER_REGION_ON_RESET_IF_IN_OFF_REGION);
+    putc('\n', stdout);
+    LOG("===> Timezone config\n");
+    LOG("Offset Daylight Time: %s\n", fdelta(TIMEZONE_OFFSET_DT, FBUF()));
+    LOG("Offset Standard Time: %s\n", fdelta(TIMEZONE_OFFSET_ST, FBUF()));
+    putc('\n', stdout);
+    LOG("===> LCD config\n");
+    LOG("i2c instance:  %d\n", (STATUS_LCD_I2C_INSTANCE == i2c0) ? 0 : 1);
+    LOG("i2c address:   %02x (%d)\n", STATUS_LCD_I2C_ADDRESS, STATUS_LCD_I2C_ADDRESS);
+    LOG("i2c SDL GPIO:  %d\n", STATUS_LCD_I2C_SDA_PIN);
+    LOG("i2c SCL GPIO:  %d\n", STATUS_LCD_I2C_SCL_PIN);
+    LOG("Page interval: %s\n", fdelta_us(((uint64_t)STATUS_LCD_INTERVALS_PER_PAGE) * STATUS_PRINT_INTERVAL, FBUF()));
+    putc('\n', stdout);
+    LOG("===> Miscellaneous config\n");
+#ifdef WS2812_STATUS_GPIO
+    LOG("WS2812 Status GPIO: %d\n", WS2812_STATUS_GPIO);
+#else
+    LOG("WS2812 Status GPIO: n/a\n");
+#endif
+    LOG("WS2812 Status Heartbeat Period: %d\n", WS2812_STATUS_HEARTBEAT_PERIOD);
+    LOG("USB STDIO wait time: %s\n", fdelta_us(MAX_WAIT_USB_STDIO, FBUF()));
+    LOG("Loop averaging sample count: %d\n", LOOP_AVERAGE_SAMPLE_COUNT);
+    LOG("Automatic reboot interval: %s\n", fdelta(AUTOMATIC_REBOOT_INTERVAL, FBUF()));
+    LOG("Automatic reboot minimum distance to region: %s\n", fdelta(AUTOMATIC_REBOOT_MIN_DISTANCE_TO_REGION, FBUF()));
+}
+
 int main()
 {
     gpio_init(SCHEDULE_SELECT_PIN);
@@ -119,7 +190,10 @@ int main()
     while (!stdio_usb_connected() && time_us_64() < MAX_WAIT_USB_STDIO)
         sleep_ms(5);
 
-    printf("\n\nBegin boot\npico-light-switch %s %s\n\n", __DATE__, __TIME__);
+    printf("\n\n");
+    LOG("Begin boot\n");
+    dump_program_info();
+    printf("\n\n");
 
     core0_loop_measure = loop_measure_init();
     core1_loop_measure = loop_measure_init();
