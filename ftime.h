@@ -32,10 +32,10 @@
 #pragma once
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uint64_t */
+#include <stdint.h> /* int64_t */
 
 /**
- * Format microseconds value as "DD:HH:MM:SS.SSSSSS"
+ * Format microseconds value as "+DD:HH:MM:SS.SSSSSS"
  *
  * @param us Time-delta to format
  * @param buffer Buffer to write to
@@ -43,10 +43,10 @@
  *
  * @returns Buffer pointer
  */
-char* fdelta_us(const uint64_t us, char* const buffer, size_t buf_size);
+char* fdelta_us(int64_t us, char* const buffer, size_t buf_size);
 
 /**
- * Format seconds value as "DD:HH:MM:SS"
+ * Format seconds value as "+DD:HH:MM:SS"
  *
  * @param s Time-delta to format
  * @param buffer Buffer to write to
@@ -54,7 +54,7 @@ char* fdelta_us(const uint64_t us, char* const buffer, size_t buf_size);
  *
  * @returns Buffer pointer
  */
-char* fdelta(const uint64_t s, char* const buffer, size_t buf_size);
+char* fdelta(int64_t s, char* const buffer, size_t buf_size);
 
 /**
  * Format microseconds since 1970 timestamp value as "YYYY-MM-DD HH:MM:SS.SSSSSS" adjusted to the local timezone as configured in @sa config.h
@@ -65,7 +65,7 @@ char* fdelta(const uint64_t s, char* const buffer, size_t buf_size);
  *
  * @returns Buffer pointer
  */
-char* ftime_us(const uint64_t us, char* const buffer, size_t buf_size);
+char* ftime_us(const int64_t us, char* const buffer, size_t buf_size);
 
 /**
  * Format seconds since 1970 timestamp value as "YYYY-MM-DD HH:MM:SS" adjusted to the local timezone as configured in @sa config.h
@@ -76,7 +76,7 @@ char* ftime_us(const uint64_t us, char* const buffer, size_t buf_size);
  *
  * @returns Buffer pointer
  */
-char* ftime(const uint64_t s, char* const buffer, size_t buf_size);
+char* ftime(const int64_t s, char* const buffer, size_t buf_size);
 
 /**
  * Format seconds since 1970 timestamp value as "YYYYMMDD HHMMSS" adjusted to the local timezone as configured in @sa config.h
@@ -87,4 +87,4 @@ char* ftime(const uint64_t s, char* const buffer, size_t buf_size);
  *
  * @returns Buffer pointer
  */
-char* ftime_compact(const uint64_t s, char* const buffer, size_t buf_size);
+char* ftime_compact(const int64_t s, char* const buffer, size_t buf_size);

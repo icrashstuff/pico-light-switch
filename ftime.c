@@ -38,24 +38,30 @@
 #include "config.h"
 #include "time_64bit.h"
 
-char* fdelta_us(const uint64_t us, char* const buffer, size_t buf_size)
+char* fdelta_us(int64_t us, char* const buffer, size_t buf_size)
 {
+    bool negative = us < 0;
+    if (negative)
+        us = -us;
     uint64_t s = us / 1000000ull;
     uint64_t m = s / 60ull;
     uint64_t h = m / 60ull;
     uint64_t d = h / 24ull;
 
-    snprintf(buffer, buf_size, "%02llu:%02llu:%02llu:%02llu.%06llu", d, h % 24ull, m % 60ull, s % 60ull, us % 1000000ull);
+    snprintf(buffer, buf_size, "%c%02llu:%02llu:%02llu:%02llu.%06llu", negative ? '-' : '+', d, h % 24ull, m % 60ull, s % 60ull, us % 1000000ull);
     return buffer;
 }
 
-char* fdelta(const uint64_t s, char* const buffer, size_t buf_size)
+char* fdelta(int64_t s, char* const buffer, size_t buf_size)
 {
+    bool negative = s < 0;
+    if (negative)
+        s = -s;
     uint64_t m = s / 60ull;
     uint64_t h = m / 60ull;
     uint64_t d = h / 24ull;
 
-    snprintf(buffer, buf_size, "%02llu:%02llu:%02llu:%02llu", d, h % 24ull, m % 60ull, s % 60ull);
+    snprintf(buffer, buf_size, "%c%02llu:%02llu:%02llu:%02llu", negative ? '-' : '+', d, h % 24ull, m % 60ull, s % 60ull);
     return buffer;
 }
 
@@ -67,7 +73,7 @@ char* fdelta(const uint64_t s, char* const buffer, size_t buf_size)
 
 static_assert(DAYS_IN_LEAP_CYCLE == DAYS_BY_SUB_LEAP_CYCLE_4_END, "");
 
-char* ftime_us(const uint64_t us, char* const buffer, size_t buf_size)
+char* ftime_us(const int64_t us, char* const buffer, size_t buf_size)
 {
     tm_64_bit_t tm = {};
     gmtime_r_64bit_us(us, &tm);
@@ -78,7 +84,7 @@ char* ftime_us(const uint64_t us, char* const buffer, size_t buf_size)
     return buffer;
 }
 
-char* ftime(const uint64_t s, char* const buffer, size_t buf_size)
+char* ftime(const int64_t s, char* const buffer, size_t buf_size)
 {
     tm_64_bit_t tm = {};
     gmtime_r_64bit(s, &tm);
@@ -88,7 +94,7 @@ char* ftime(const uint64_t s, char* const buffer, size_t buf_size)
     return buffer;
 }
 
-char* ftime_compact(const uint64_t s, char* const buffer, size_t buf_size)
+char* ftime_compact(const int64_t s, char* const buffer, size_t buf_size)
 {
     tm_64_bit_t tm = {};
     gmtime_r_64bit(s, &tm);
