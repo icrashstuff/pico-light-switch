@@ -6,3 +6,4 @@ doxygen/*
 html/*
 __pycache__/*
 *.pyc
+pico-light-switch_source_distribution/*
