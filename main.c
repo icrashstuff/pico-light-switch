@@ -186,8 +186,19 @@ int main()
     gpio_set_dir(SCHEDULE_SELECT_PIN, GPIO_IN);
     gpio_pull_up(SCHEDULE_SELECT_PIN);
 
+    gpio_init(I2C_POWER_INTERRUPT_GPIO);
+    gpio_set_dir(I2C_POWER_INTERRUPT_GPIO, GPIO_OUT);
+    gpio_put(I2C_POWER_INTERRUPT_GPIO, I2C_POWER_INTERRUPT_ACTIVE_LOGIC_LEVEL);
+
     stdio_init_all();
-    while (!stdio_usb_connected() && time_us_64() < MAX_WAIT_USB_STDIO)
+    absolute_time_t time_usb_connect_timeout = make_timeout_time_us(time_us_64() + MAX_WAIT_USB_STDIO);
+
+    gpio_put(I2C_POWER_INTERRUPT_GPIO, I2C_POWER_INTERRUPT_ACTIVE_LOGIC_LEVEL);
+    sleep_us(I2C_POWER_WAIT_TIME);
+    gpio_put(I2C_POWER_INTERRUPT_GPIO, !I2C_POWER_INTERRUPT_ACTIVE_LOGIC_LEVEL);
+    sleep_us(I2C_POWER_WAIT_TIME);
+
+    while (!stdio_usb_connected() && !time_reached(time_usb_connect_timeout))
         sleep_ms(5);
 
     printf("\n\n");

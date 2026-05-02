@@ -120,6 +120,27 @@
 #define STATUS_LCD_INTERVALS_PER_PAGE 8
 
 /******************************************************
+ *             I2C POWER INTERRUPT CONFIG             *
+ ******************************************************/
+
+/**
+ * GPIO pin that opens a normally closed relay to interrupt power to i2c devices
+ *
+ * This exists to trigger the status LCD reset circuit
+ */
+#define I2C_POWER_INTERRUPT_GPIO WAVESHARE_RELAY_CHANNEL_6
+
+/**
+ * Logic level to drive @ref I2C_POWER_INTERRUPT_GPIO at to interrupt i2c power
+ */
+#define I2C_POWER_INTERRUPT_ACTIVE_LOGIC_LEVEL 1
+
+/**
+ * Time to wait (in microseconds) for I2C devices to power up/power down
+ */
+#define I2C_POWER_WAIT_TIME (500ull * 1000ull)
+
+/******************************************************
  *              WS2812 STATUS LED CONFIG              *
  ******************************************************/
 
