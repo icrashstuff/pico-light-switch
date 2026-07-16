@@ -51,28 +51,45 @@ def dtrange(start : datetime.datetime,
         cur = cur + datetime.timedelta(days=1)
     return l
 
-schedule_start = d(2025, 8, 14)
-schedule_end = d(2026, 5, 22)
+schedule_start = d(2026, 8, 7)
+schedule_end = d(2027, 5, 21)
 
 schedule_true_start = schedule_start - datetime.timedelta(weeks=16)
 schedule_true_end = schedule_end + datetime.timedelta(weeks=16)
 
 schedule_exceptions = [
     *dtrange(schedule_true_start, schedule_start - datetime.timedelta(days=1)), # Schedule header (Summer break)
-    d(2025,  9,  1), # Labor day
-    d(2025,  9,  1), # Labor day
-    d(2025,  9, 15), # Reads Act
-    d(2025, 11,  3), # PC
-    d(2025, 11, 10), # PL
-    d(2025, 11, 11), # Veterans day
-    d(2025, 11, 27), # Thanksgiving
-    d(2025, 11, 28), # Day after thanksgiving
-    *drange(2025, 12, 19, 2026, 1, 2), # Winter break
-    d(2026,  1, 19), # MLK
-    d(2026,  2,  9), # PC
-    d(2026,  2, 16), # PC
-    *drange(2026, 3, 6, 2026, 3, 13), # Spring break
-    d(2026,  5,  1), # PL
+    # 08 - August
+
+    # 09 - September
+    d(2026,  9,  7), # Labor Day
+    d(2026,  9, 14), # AK Reads act
+
+    # 10 - October
+
+    # 11 - November
+    d(2026, 11, 11), # Veterans Day
+    d(2026, 11, 26), # Thanksgiving Day
+    d(2026, 11, 27), # Day After Thanksgiving
+
+    # 12 - December
+    *drange(2026, 12, 21,  # Winter break
+            2026, 12, 31), # Winter break
+
+    # 01 - January
+    d(2027,  1,  1), # New Years
+    d(2027,  1, 18), # MLK Day
+
+    # 02 - February
+
+    # 03 - March
+    *drange(2027,  3,  8,  # Spring break
+            2027,  3, 12), # Spring break
+
+    # 04 - April
+
+    # 05 - May
+
     *dtrange(schedule_end + datetime.timedelta(days=1), schedule_true_end), # Schedule footer (Summer break)
 ]
 
@@ -92,13 +109,13 @@ time_on_exercise = [
 
 # Used on schedule_exceptions days, regardless of level
 time_off_exercise = [
-    [        ], # Sunday
-    [        ], # Monday
-    [t(7, 10)], # Tuesday
-    [        ], # Wednesday
-    [        ], # Thursday
-    [        ], # Friday
-    [        ]  # Saturday
+    [t(25, 0)], # Sunday
+    [t(25, 0)], # Monday
+    [t(25, 0),t(7, 10)], # Tuesday
+    [t(25, 0)], # Wednesday
+    [t(25, 0)], # Thursday
+    [t(25, 0)], # Friday
+    [t(25, 0)]  # Saturday
 ]
 
 time_on_level_2 = [
@@ -122,13 +139,13 @@ time_off_soft_level_2 = [
 ]
 
 time_off_level_2 = [
-    [        ], # Sunday
+    [t(25, 0)], # Sunday
     [t(25, 0)], # Monday
     [t(25, 0)], # Tuesday
     [t(25, 0)], # Wednesday
     [t(25, 0)], # Thursday
     [t(25, 0)], # Friday
-    [        ]  # Saturday
+    [t(25, 0)]  # Saturday
 ]
 
 time_on_level_1 = [
@@ -152,13 +169,13 @@ time_off_soft_level_1 = [
 ]
 
 time_off_level_1 = [
-    [        ], # Sunday
+    [t(25, 0)], # Sunday
     [t(25, 0)], # Monday
     [t(25, 0)], # Tuesday
     [t(25, 0)], # Wednesday
     [t(25, 0)], # Thursday
     [t(25, 0)], # Friday
-    [        ]  # Saturday
+    [t(25, 0)]  # Saturday
 ]
 
 def generate_schedule(time_on: list[list[datetime.timedelta]],
