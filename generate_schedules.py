@@ -54,8 +54,8 @@ def dtrange(start : datetime.datetime,
 schedule_start = d(2026, 8, 7)
 schedule_end = d(2027, 5, 21)
 
-schedule_true_start = schedule_start - datetime.timedelta(weeks=16)
-schedule_true_end = schedule_end + datetime.timedelta(weeks=16)
+schedule_true_start: datetime.datetime = schedule_start - datetime.timedelta(weeks=16)
+schedule_true_end: datetime.datetime = schedule_end + datetime.timedelta(weeks=16)
 
 schedule_exceptions = [
     *dtrange(schedule_true_start, schedule_start - datetime.timedelta(days=1)), # Schedule header (Summer break)
@@ -178,39 +178,74 @@ time_off_level_1 = [
     [t(25, 0)]  # Saturday
 ]
 
-def generate_schedule(time_on: list[list[datetime.timedelta]],
-                      time_off_soft: list[list[datetime.timedelta]],
-                      time_off: list[list[datetime.timedelta]]
-                      ) -> list[tuple[int, bool]]:
+def generate_schedule(
+        time_on: list[list[datetime.timedelta]],
+        time_off_soft: list[list[datetime.timedelta]],
+        time_off: list[list[datetime.timedelta]]
+        ) -> list[tuple[int, bool, datetime.datetime, str]]:
     cur = schedule_true_start
     out = []
     while(cur <= schedule_true_end):
         day_of_week = (cur.weekday() + 1) % 7
+        cur_str = cur.strftime("%Y-%m-%d %a")
         if(cur not in schedule_exceptions):
             for i in time_on[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1, 1, cur + i))
+                out.append((
+                    int((cur + i).timestamp()),
+                    1, # On State
+                    1, # Allow resume
+                    cur + i,
+                    f"Regular from {cur_str}"
+                ))
             for i in time_off_soft[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0, 0, cur + i))
+                out.append((
+                    int((cur + i).timestamp()),
+                    0, # On State
+                    0, # Allow resume
+                    cur + i,
+                    f"Regular from {cur_str}"
+                ))
             for i in time_off[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0, 1, cur + i))
+                out.append((
+                    int((cur + i).timestamp()),
+                    0, # On State
+                    1, # Allow resume
+                    cur + i,
+                    f"Regular from {cur_str}"
+                ))
         else:
             for i in time_on_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 1, 1, cur + i))
+                out.append((
+                    int((cur + i).timestamp()),
+                    1, # On State
+                    0, # Allow resume
+                    cur + i,
+                    f"Exception from {cur_str}"
+                ))
             for i in time_off_exercise[day_of_week]:
-                out.append((int((cur + i).timestamp()), 0, 1, cur + i))
+                out.append((
+                    int((cur + i).timestamp()),
+                    0, # On State
+                    0, # Allow resume
+                    cur + i,
+                    f"Exception from {cur_str}"
+                ))
 
         cur = cur + datetime.timedelta(days=1)
 
     return sorted(out, key=lambda x: x[0])
 
-def write_schedule_header(name: str, sched: list[tuple[int, bool]]) -> None:
+def write_schedule_header(
+        name: str,
+        sched: list[tuple[int, bool, datetime.datetime, str]]
+        ) -> None:
     with open(f"{name}.h", 'w') as fd:
         epoch = sched[0][0]
         fd.write("/* clang-format off */\n")
         fd.write(f"static const schedule_t {name} =" " { " f"{sched[0][0]}ull, {len(sched)},\n")
         fd.write("    {\n")
         for i in sched:
-            fd.write("        {% 9d, %d, %d }, // %s\n" % (i[0] - epoch, i[1], i[2], i[3].strftime("%Y-%m-%d %H:%M:%S %:z")))
+            fd.write("        {% 9d, %d, %d }, // %s; %s\n" % (i[0] - epoch, i[1], i[2], i[3].strftime("%Y-%m-%d %H:%M:%S %:z %a"), i[4]))
         fd.write("    } };\n")
         fd.write("/* clang-format on */\n")
 
